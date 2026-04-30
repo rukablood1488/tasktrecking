@@ -14,61 +14,12 @@ from django.contrib import messages
 
 from .models import Workspace, WorkspaceMember, Project, TaskList, Task, Comment, Tag, TaskActivity
 
-
-
-#  Mixin`s ----------------------------------------------------------------------------------------------
-
-class WorkspaceMemberMixin(LoginRequiredMixin):
-
-    def get_workspace(self):
-        return get_object_or_404(Workspace, pk=self.kwargs["workspace_pk"])
-
-    def dispatch(self, request, *args, **kwargs):
-        workspace = self.get_workspace()
-        is_member = WorkspaceMember.objects.filter(
-            workspace=workspace, user=request.user
-        ).exists()
-        if not is_member:
-            return HttpResponseForbidden("Ви не є учасником цього простору.")
-        return super().dispatch(request, *args, **kwargs)
-
-
-class WorkspaceAdminMixin(WorkspaceMemberMixin):
-
-    def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if isinstance(response, HttpResponseForbidden):
-            return response
-        workspace = self.get_workspace()
-        member = WorkspaceMember.objects.filter(
-            workspace=workspace,
-            user=request.user,
-            role__in=[WorkspaceMember.Role.OWNER, WorkspaceMember.Role.ADMIN]
-        ).exists()
-        if not member:
-            return HttpResponseForbidden("Потрібні права адміністратора.")
-        return response
-
-
-class TaskOwnerOrAdminMixin(LoginRequiredMixin):
-
-    def get_task(self):
-        return get_object_or_404(Task, pk=self.kwargs["pk"])
-
-    def dispatch(self, request, *args, **kwargs):
-        task = self.get_task()
-        workspace = task.task_list.project.workspace
-        is_admin = WorkspaceMember.objects.filter(
-            workspace=workspace,
-            user=request.user,
-            role__in=[WorkspaceMember.Role.OWNER, WorkspaceMember.Role.ADMIN]
-        ).exists()
-        is_creator = task.created_by == request.user
-        if not (is_admin or is_creator):
-            return HttpResponseForbidden("Недостатньо прав для цієї дії.")
-        return super().dispatch(request, *args, **kwargs)
-
-
+from .mixins import (
+    WorkspaceMemberMixin,
+    WorkspaceAdminMixin,
+    TaskOwnerOrAdminMixin,
+    CommentAuthorOrAdminMixin,
+)
 
 #  auth ---------------------------------------------------------------------------
 
@@ -509,7 +460,7 @@ class CommentCreateView(LoginRequiredMixin, View):
         return redirect(task.get_absolute_url() + "#comments")
 
 
-class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class CommentUpdateView(LoginRequiredMixin, CommentAuthorOrAdminMixin, UpdateView):
     model = Comment
     template_name = "tasks/comment_form.html"
     fields = ["content"]
@@ -525,7 +476,7 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return redirect(comment.task.get_absolute_url() + "#comments")
 
 
-class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class CommentDeleteView(LoginRequiredMixin, CommentAuthorOrAdminMixin, DeleteView):
     model = Comment
     template_name = "tasks/comment_confirm_delete.html"
 
