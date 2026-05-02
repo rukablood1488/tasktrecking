@@ -460,7 +460,7 @@ class CommentCreateView(LoginRequiredMixin, View):
         return redirect(task.get_absolute_url() + "#comments")
 
 
-class CommentUpdateView(LoginRequiredMixin, CommentAuthorOrAdminMixin, UpdateView):
+class CommentUpdateView(CommentAuthorOrAdminMixin, LoginRequiredMixin, UpdateView):
     model = Comment
     template_name = "tasks/comment_form.html"
     fields = ["content"]
@@ -476,7 +476,7 @@ class CommentUpdateView(LoginRequiredMixin, CommentAuthorOrAdminMixin, UpdateVie
         return redirect(comment.task.get_absolute_url() + "#comments")
 
 
-class CommentDeleteView(LoginRequiredMixin, CommentAuthorOrAdminMixin, DeleteView):
+class CommentDeleteView(CommentAuthorOrAdminMixin, LoginRequiredMixin, DeleteView):
     model = Comment
     template_name = "tasks/comment_confirm_delete.html"
 

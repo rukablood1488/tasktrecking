@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.db.models import Count
+from django import forms
 
 from .models import (
     Workspace, WorkspaceMember,
@@ -10,12 +11,39 @@ from .models import (
 
 
 
+class TaskAdminForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if not TaskList.objects.exists():
+            self.fields["task_list"].help_text = (
+                "Немає жодного списку. Спочатку створіть: "
+                "Workspace → Project (TaskList створиться автоматично)."
+            )
+        else:
+            self.fields["task_list"].queryset = TaskList.objects.select_related(
+                "project__workspace"
+            ).order_by("project__workspace__name", "project__name", "name")
+
+            self.fields["task_list"].label_from_instance = (
+                lambda obj:
+                f"{obj.project.workspace.name}  ›  {obj.project.name}  ›  {obj.name}"
+            )
+
+
+
+
+
 
 class WorkspaceMemberInline(admin.TabularInline):
     
     model = WorkspaceMember
     extra = 1          # кількість порожніх рядків для додавання нових учасників
-    autocomplete_fields = ["user"] 
+    autocomplete_fields = ["user"]
 
 
 class TaskListInline(admin.TabularInline):
@@ -28,7 +56,7 @@ class TaskListInline(admin.TabularInline):
 class SubtaskInline(admin.TabularInline):
     
     model = Task
-    fk_name = "parent_task"
+    fk_name = "parent_task"   
     extra = 0
     fields = ["title", "status", "priority", "assignees"]
     readonly_fields = ["assignees"]
@@ -38,7 +66,7 @@ class SubtaskInline(admin.TabularInline):
 
 
 class CommentInline(admin.StackedInline):
-
+    
     model = Comment
     extra = 0
     readonly_fields = ["author", "created_at", "is_edited"]
@@ -54,7 +82,6 @@ class TaskActivityInline(admin.TabularInline):
 
     def has_add_permission(self, request, obj=None):
         return False
-
 
 
 
@@ -89,7 +116,6 @@ class WorkspaceAdmin(admin.ModelAdmin):
 
 
 
-
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     list_display = [
@@ -111,9 +137,7 @@ class ProjectAdmin(admin.ModelAdmin):
     def colored_name(self, obj):
         return format_html(
             '<span style="color: {}; font-weight: 600;">{} {}</span>',
-            obj.color,
-            obj.icon,
-            obj.name,
+            obj.color, obj.icon, obj.name,
         )
 
     @admin.display(description="Завдань", ordering="_task_count")
@@ -122,12 +146,31 @@ class ProjectAdmin(admin.ModelAdmin):
 
 
 
+@admin.register(TaskList)
+class TaskListAdmin(admin.ModelAdmin):
+    list_display = ["name", "project", "workspace_name", "task_count", "position"]
+    list_filter = ["project__workspace", "project"]
+    search_fields = ["name", "project__name", "project__workspace__name"]
+    list_editable = ["position"]
+    ordering = ["project__workspace", "project", "position"]
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related(
+            "project__workspace"
+        ).annotate(_task_count=Count("tasks", distinct=True))
 
+    @admin.display(description="Простір")
+    def workspace_name(self, obj):
+        return obj.project.workspace.name
+
+    @admin.display(description="Завдань", ordering="_task_count")
+    def task_count(self, obj):
+        return obj._task_count
 
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
+    form = TaskAdminForm         
     list_display = [
         "title", "status_badge", "priority_badge",
         "task_list", "assignees_list",
@@ -136,11 +179,10 @@ class TaskAdmin(admin.ModelAdmin):
     list_filter = ["status", "priority", "is_archived", "task_list__project__workspace"]
     search_fields = ["title", "description", "created_by__username"]
     readonly_fields = ["created_at", "updated_at", "completed_at"]
-    filter_horizontal = ["assignees", "tags"] 
-    date_hierarchy = "created_at"              # навігація по датах
+    filter_horizontal = ["assignees", "tags"]
+    date_hierarchy = "created_at"
     inlines = [SubtaskInline, CommentInline, TaskActivityInline]
 
-    # групування полів у секції на сторінці редагування
     fieldsets = (
         ("Основне", {
             "fields": ("title", "description", "task_list", "parent_task")
@@ -160,13 +202,12 @@ class TaskAdmin(admin.ModelAdmin):
         }),
     )
 
-    
     STATUS_COLORS = {
-        "todo":        ("#6c757d"),
-        "in_progress": ("#0d6efd"),
-        "in_review":   ("#fd7e14"),
-        "done":        ("#198754"),
-        "cancelled":   ("#dc3545"),
+        "todo":        ("#6c757d", "."),
+        "in_progress": ("#0d6efd", "."),
+        "in_review":   ("#fd7e14", "."),
+        "done":        ("#198754", "."),
+        "cancelled":   ("#dc3545", "."),
     }
 
     PRIORITY_COLORS = {
@@ -201,7 +242,14 @@ class TaskAdmin(admin.ModelAdmin):
     @admin.display(description="Прострочено", boolean=True)
     def is_overdue_display(self, obj):
         return obj.is_overdue
-
+    
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for instance in instances:
+            if isinstance(instance, Comment) and not instance.author_id:
+                instance.author = request.user
+            instance.save()
+        formset.save_m2m()
 
 
 
@@ -218,8 +266,6 @@ class CommentAdmin(admin.ModelAdmin):
     @admin.display(description="Коментар")
     def short_content(self, obj):
         return obj.content[:60] + "..." if len(obj.content) > 60 else obj.content
-
-
 
 
 
@@ -246,6 +292,7 @@ class TagAdmin(admin.ModelAdmin):
     @admin.display(description="Завдань", ordering="_task_count")
     def task_count(self, obj):
         return obj._task_count
+
 
 
 

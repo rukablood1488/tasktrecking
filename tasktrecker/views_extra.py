@@ -253,4 +253,4 @@ class TaskArchiveView(LoginRequiredMixin, View):
                 "is_archived": task.is_archived,
             })
 
-        return redirect(reverse("project-detail", kwargs={"pk": task.task_list.project.pk})
+        return redirect(reverse("project-detail", kwargs={"pk": task.task_list.project.pk}))
