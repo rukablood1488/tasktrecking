@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import views_extra
 
 
 auth_patterns = [
@@ -33,15 +34,15 @@ workspace_patterns = [
 
 
     path("<int:workspace_pk>/members/",
-         views.WorkspaceMemberListView.as_view(),
+         views_extra.WorkspaceMemberListView.as_view(),
          name="workspace-members"),
 
     path("<int:workspace_pk>/members/invite/",
-         views.WorkspaceMemberInviteView.as_view(),
+         views_extra.WorkspaceMemberInviteView.as_view(),
          name="workspace-invite"),
 
     path("<int:workspace_pk>/members/<int:member_pk>/remove/",
-         views.WorkspaceMemberRemoveView.as_view(),
+         views_extra.WorkspaceMemberRemoveView.as_view(),
          name="workspace-member-remove"),
 
     
@@ -75,15 +76,15 @@ project_patterns = [
 
     
     path("projects/<int:project_pk>/lists/create/",
-         views.TaskListCreateView.as_view(),
+         views_extra.TaskListCreateView.as_view(),
          name="tasklist-create"),
 
     path("projects/lists/<int:pk>/edit/",
-         views.TaskListUpdateView.as_view(),
+         views_extra.TaskListUpdateView.as_view(),
          name="tasklist-update"),
 
     path("projects/lists/<int:pk>/delete/",
-         views.TaskListDeleteView.as_view(),
+         views_extra.TaskListDeleteView.as_view(),
          name="tasklist-delete"),
 ]
 
@@ -115,11 +116,11 @@ task_patterns = [
          name="task-status-update"),
 
     path("<int:pk>/reorder/",
-         views.TaskReorderView.as_view(),
+         views_extra.TaskReorderView.as_view(),
          name="task-reorder"),
 
     path("<int:pk>/archive/",
-         views.TaskArchiveView.as_view(),
+         views_extra.TaskArchiveView.as_view(),
          name="task-archive"),
 ]
 
