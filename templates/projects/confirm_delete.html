@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Видалити проект — TaskFlow{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
+  <span class="topbar__crumb-sep">›</span>
+  <a href="{% url 'workspace-detail' pk=object.workspace.pk %}" class="topbar__crumb">
+    {{ object.workspace.name }}
+  </a>
+  <span class="topbar__crumb-sep">›</span>
+  <span class="topbar__crumb topbar__crumb--current">Видалення проекту</span>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card form-card--danger">
+
+    <div class="form-card__header">
+      <span class="form-card__danger-icon">⚠️</span>
+      <h1 class="form-card__title">
+        Видалити проект «{{ object.icon }} {{ object.name }}»?
+      </h1>
+    </div>
+
+    <div class="form-card__warning-box">
+      <p>Разом з проектом буде <strong>безповоротно видалено</strong>:</p>
+      <ul class="form-card__list">
+        {% for task_list in object.task_lists.all %}
+          <li>
+            Список «{{ task_list.name }}» ({{ task_list.tasks.count }} завдань)
+          </li>
+        {% endfor %}
+        <li>Усі коментарі та журнал активності</li>
+      </ul>
+    </div>
+
+    <form method="POST" class="form-actions">
+      {% csrf_token %}
+      <button type="submit" class="btn btn--danger">Так, видалити проект</button>
+      <a href="{% url 'project-detail' pk=object.pk %}" class="btn btn--ghost">Скасувати</a>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

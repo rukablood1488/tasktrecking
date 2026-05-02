@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Видалити список — TaskFlow{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card form-card--danger">
+
+    <div class="form-card__header">
+      <span class="form-card__danger-icon">⚠️</span>
+      <h1 class="form-card__title">Видалити список «{{ object.name }}»?</h1>
+    </div>
+
+    <div class="form-card__warning-box">
+      <p>
+        Буде видалено <strong>{{ object.tasks.count }}</strong>
+        завдань{{ object.tasks.count|pluralize:" (1 завдання),ь" }} разом зі списком.
+      </p>
+    </div>
+
+    <form method="POST" class="form-actions">
+      {% csrf_token %}
+      <button type="submit" class="btn btn--danger">Так, видалити</button>
+      <a href="{% url 'project-detail' pk=object.project.pk %}" class="btn btn--ghost">
+        Скасувати
+      </a>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

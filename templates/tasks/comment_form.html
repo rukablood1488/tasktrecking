@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Редагувати коментар — TaskFlow{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'task-detail' pk=object.task.pk %}" class="topbar__crumb">
+    {{ object.task.title|truncatechars:30 }}
+  </a>
+  <span class="topbar__crumb-sep">›</span>
+  <span class="topbar__crumb topbar__crumb--current">Редагувати коментар</span>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card">
+
+    <div class="form-card__header">
+      <h1 class="form-card__title">✏️ Редагувати коментар</h1>
+      <p class="form-card__subtitle">
+        До завдання «{{ object.task.title }}»
+      </p>
+    </div>
+
+    
+    <div class="comment-edit__original">
+      <span class="comment__author">{{ object.author.username }}</span>
+      <span class="comment__time">{{ object.created_at|date:"d.m.Y H:i" }}</span>
+    </div>
+
+    <form method="POST" class="generic-form">
+      {% csrf_token %}
+
+      <div class="form-group {% if form.content.errors %}form-group--error{% endif %}">
+        <label class="form-label" for="{{ form.content.id_for_label }}">Текст коментаря</label>
+        {{ form.content }}
+        {% for error in form.content.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">Зберегти зміни</button>
+        <a href="{% url 'task-detail' pk=object.task.pk %}#comment-{{ object.pk }}"
+           class="btn btn--ghost">Скасувати</a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

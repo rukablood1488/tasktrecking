@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Редагувати список — TaskFlow{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
+  <span class="topbar__crumb-sep">›</span>
+  <a href="{% url 'project-detail' pk=object.project.pk %}" class="topbar__crumb">
+    {{ object.project.name }}
+  </a>
+  <span class="topbar__crumb-sep">›</span>
+  <span class="topbar__crumb topbar__crumb--current">Редагувати список</span>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card">
+
+    <div class="form-card__header">
+      <h1 class="form-card__title">✏️ Редагувати список «{{ object.name }}»</h1>
+    </div>
+
+    <form method="POST" class="generic-form">
+      {% csrf_token %}
+
+      <div class="form-group {% if form.name.errors %}form-group--error{% endif %}">
+        <label class="form-label" for="{{ form.name.id_for_label }}">
+          Назва <span class="form-label__required">*</span>
+        </label>
+        {{ form.name }}
+        {% for error in form.name.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.description.id_for_label }}">Опис</label>
+        {{ form.description }}
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">Зберегти</button>
+        <a href="{% url 'project-detail' pk=object.project.pk %}" class="btn btn--ghost">
+          Скасувати
+        </a>
+        <a href="{% url 'tasklist-delete' pk=object.pk %}"
+           class="btn btn--ghost btn--danger" style="margin-left:auto;">
+          🗑️ Видалити список
+        </a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

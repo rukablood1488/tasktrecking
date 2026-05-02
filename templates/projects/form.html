@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}
+  {% if object %}Редагувати «{{ object.name }}»{% else %}Новий проект{% endif %} — TaskFlow
+{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
+  <span class="topbar__crumb-sep">›</span>
+  {% if object %}
+    <a href="{% url 'workspace-detail' pk=object.workspace.pk %}" class="topbar__crumb">
+      {{ object.workspace.name }}
+    </a>
+    <span class="topbar__crumb-sep">›</span>
+    <span class="topbar__crumb topbar__crumb--current">Редагувати проект</span>
+  {% else %}
+    <span class="topbar__crumb topbar__crumb--current">Новий проект</span>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card">
+
+    <div class="form-card__header">
+      <h1 class="form-card__title">
+        {% if object %}✏️ Редагувати «{{ object.name }}»{% else %}📁 Новий проект{% endif %}
+      </h1>
+    </div>
+
+    <form method="POST" class="generic-form">
+      {% csrf_token %}
+
+      {# ── Назва ── #}
+      <div class="form-group {% if form.name.errors %}form-group--error{% endif %}">
+        <label class="form-label" for="{{ form.name.id_for_label }}">
+          Назва <span class="form-label__required">*</span>
+        </label>
+        {{ form.name }}
+        {% for error in form.name.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      {# ── Опис ── #}
+      <div class="form-group">
+        <label class="form-label" for="{{ form.description.id_for_label }}">Опис</label>
+        {{ form.description }}
+      </div>
+
+    
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.color.id_for_label }}">Колір</label>
+          {{ form.color }}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="{{ form.icon.id_for_label }}">Іконка (emoji)</label>
+          {{ form.icon }}
+          <small class="form-hint">Вставте один emoji: 🚀 📊 💡 🔧</small>
+        </div>
+      </div>
+
+      
+      <div class="form-group">
+        <label class="form-label">Попередній перегляд</label>
+        <div class="project-preview" id="projectPreview">
+          <div class="project-preview__card"
+               style="border-left: 4px solid {{ form.color.value|default:'#4F8EF7' }};">
+            <span id="previewIcon">{{ form.icon.value|default:"📁" }}</span>
+            <span id="previewName">{{ form.name.value|default:"Назва проекту" }}</span>
+          </div>
+        </div>
+      </div>
+
+      {% if object %}
+        <div class="form-group">
+          <label class="form-label" for="{{ form.is_archived.id_for_label }}">
+            <span class="form-checkbox-wrap">
+              {{ form.is_archived }}
+              Архівувати проект
+            </span>
+          </label>
+        </div>
+      {% endif %}
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">
+          {% if object %}Зберегти зміни{% else %}Створити проект{% endif %}
+        </button>
+        <a href="javascript:history.back()" class="btn btn--ghost">Скасувати</a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

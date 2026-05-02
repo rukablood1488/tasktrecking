@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Видалити завдання — TaskFlow{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card form-card--danger">
+
+    <div class="form-card__header">
+      <span class="form-card__danger-icon">🗑️</span>
+      <h1 class="form-card__title">Видалити завдання?</h1>
+    </div>
+
+    <p class="form-card__text">
+      Ви впевнені, що хочете видалити завдання
+      <strong>«{{ object.title }}»</strong>?
+    </p>
+
+    {% if object.subtask_count > 0 %}
+      <div class="form-card__warning-box">
+        ⚠️ Разом з ним буде видалено
+        <strong>{{ object.subtask_count }}</strong> підзавдань
+        та всі коментарі.
+      </div>
+    {% endif %}
+
+    <form method="POST" class="form-actions">
+      {% csrf_token %}
+      <button type="submit" class="btn btn--danger">Так, видалити</button>
+      <a href="{% url 'task-detail' pk=object.pk %}" class="btn btn--ghost">Скасувати</a>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

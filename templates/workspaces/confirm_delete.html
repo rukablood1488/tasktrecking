@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Видалити простір — TaskFlow{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
+  <span class="topbar__crumb-sep">›</span>
+  <a href="{% url 'workspace-detail' pk=object.pk %}" class="topbar__crumb">{{ object.name }}</a>
+  <span class="topbar__crumb-sep">›</span>
+  <span class="topbar__crumb topbar__crumb--current">Видалення</span>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card form-card--danger">
+
+    <div class="form-card__header">
+      <span class="form-card__danger-icon">⚠️</span>
+      <h1 class="form-card__title">Видалити простір «{{ object.name }}»?</h1>
+    </div>
+
+    <div class="form-card__warning-box">
+      <p>Разом з простором буде <strong>безповоротно видалено</strong>:</p>
+      <ul class="form-card__list">
+        <li>Усі проекти ({{ object.projects.count }})</li>
+        <li>Усі завдання, коментарі та файли</li>
+        <li>Усі учасники будуть відключені від простору</li>
+      </ul>
+    </div>
+
+    <form method="POST" class="form-actions">
+      {% csrf_token %}
+      <button type="submit" class="btn btn--danger">Так, видалити назавжди</button>
+      <a href="{% url 'workspace-detail' pk=object.pk %}" class="btn btn--ghost">Скасувати</a>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
