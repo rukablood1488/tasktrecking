@@ -1,0 +1,91 @@
+<aside class="sidebar" id="sidebar">
+
+  
+  <div class="sidebar__logo">
+    <a href="{% url 'workspace-list' %}" class="sidebar__logo-link">
+      <span class="sidebar__logo-icon">⚡</span>
+      <span class="sidebar__logo-text">TaskFlow</span>
+    </a>
+    
+    <button class="sidebar__toggle" id="sidebarToggle" aria-label="Згорнути меню">
+      &#8249;
+    </button>
+  </div>
+
+  
+  {% if current_workspace %}
+    <div class="sidebar__workspace">
+      <div class="sidebar__workspace-name">
+        <span class="sidebar__workspace-avatar">
+          {{ current_workspace.name|first|upper }}
+        </span>
+        <span class="sidebar__workspace-title">{{ current_workspace.name }}</span>
+      </div>
+    </div>
+  {% endif %}
+
+  
+  <nav class="sidebar__nav">
+    <ul class="sidebar__nav-list">
+
+      <li class="sidebar__nav-item">
+        <a href="{% url 'task-list' %}"
+           class="sidebar__nav-link {% if request.resolver_match.url_name == 'task-list' %}sidebar__nav-link--active{% endif %}">
+          <span class="sidebar__nav-icon">📋</span>
+          <span class="sidebar__nav-label">Мої завдання</span>
+        </a>
+      </li>
+
+      <li class="sidebar__nav-item">
+        <a href="{% url 'workspace-list' %}"
+           class="sidebar__nav-link {% if request.resolver_match.url_name == 'workspace-list' %}sidebar__nav-link--active{% endif %}">
+          <span class="sidebar__nav-icon">🏠</span>
+          <span class="sidebar__nav-label">Простори</span>
+        </a>
+      </li>
+
+    </ul>
+  </nav>
+
+  
+  {% if current_workspace %}
+    <div class="sidebar__section">
+      <div class="sidebar__section-header">
+        <span class="sidebar__section-title">Проекти</span>
+        <a href="{% url 'project-create' workspace_pk=current_workspace.pk %}"
+           class="sidebar__section-action" title="Новий проект">+</a>
+      </div>
+
+      <ul class="sidebar__project-list">
+        {% for project in current_workspace.projects.all %}
+          {% if not project.is_archived %}
+            <li class="sidebar__project-item">
+              <a href="{% url 'project-detail' pk=project.pk %}"
+                 class="sidebar__project-link {% if current_project.pk == project.pk %}sidebar__project-link--active{% endif %}">
+                <span class="sidebar__project-dot" style="background: {{ project.color }};"></span>
+                <span>{{ project.icon }} {{ project.name }}</span>
+              </a>
+            </li>
+          {% endif %}
+        {% empty %}
+          <li class="sidebar__project-empty">Немає проектів</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  
+  <div class="sidebar__footer">
+    <div class="sidebar__user">
+      <div class="sidebar__user-avatar">
+        {{ user.username|first|upper }}
+      </div>
+      <div class="sidebar__user-info">
+        <span class="sidebar__user-name">{{ user.get_full_name|default:user.username }}</span>
+        <span class="sidebar__user-email">{{ user.email }}</span>
+      </div>
+    </div>
+    <a href="{% url 'logout' %}" class="sidebar__logout" title="Вийти">⏻</a>
+  </div>
+
+</aside>
