@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Новий тег — TaskFlow{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
+  <span class="topbar__crumb-sep">›</span>
+  <a href="{% url 'tag-list' workspace_pk=workspace.pk %}" class="topbar__crumb">Теги</a>
+  <span class="topbar__crumb-sep">›</span>
+  <span class="topbar__crumb topbar__crumb--current">Новий тег</span>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card">
+
+    <div class="form-card__header">
+      <h1 class="form-card__title">🏷️ Новий тег</h1>
+    </div>
+
+    <form method="POST" class="generic-form">
+      {% csrf_token %}
+
+      <div class="form-group {% if form.name.errors %}form-group--error{% endif %}">
+        <label class="form-label" for="{{ form.name.id_for_label }}">
+          Назва <span class="form-label__required">*</span>
+        </label>
+        {{ form.name }}
+        {% for error in form.name.errors %}
+          <span class="form-error">{{ error }}</span>
+        {% endfor %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.color.id_for_label }}">Колір</label>
+        {{ form.color }}
+      </div>
+
+    
+      <div class="form-group">
+        <label class="form-label">Попередній перегляд</label>
+        <div id="tagPreview">
+          <span class="tag-pill tag-pill--lg"
+                style="background: {{ form.color.value|default:'#4F8EF7' }}20;
+                       color: {{ form.color.value|default:'#4F8EF7' }};
+                       border: 1px solid {{ form.color.value|default:'#4F8EF7' }};">
+            {{ form.name.value|default:"назва тегу" }}
+          </span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">Створити тег</button>
+        <a href="{% url 'tag-list' workspace_pk=workspace.pk %}" class="btn btn--ghost">
+          Скасувати
+        </a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

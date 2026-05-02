@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Учасники — {{ workspace.name }} — TaskFlow{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
+  <span class="topbar__crumb-sep">›</span>
+  <a href="{% url 'workspace-detail' pk=workspace.pk %}" class="topbar__crumb">{{ workspace.name }}</a>
+  <span class="topbar__crumb-sep">›</span>
+  <span class="topbar__crumb topbar__crumb--current">Учасники</span>
+{% endblock %}
+
+{% block topbar_actions %}
+  {% if user_role == 'owner' or user_role == 'admin' %}
+    <a href="{% url 'workspace-invite' workspace_pk=workspace.pk %}"
+       class="btn btn--primary btn--sm">+ Запросити</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">👥 Учасники «{{ workspace.name }}»</h1>
+  <p class="page-subtitle">{{ members|length }} учасник{{ members|length|pluralize:",и,ів" }}</p>
+</div>
+
+
+{% if user_role == 'owner' or user_role == 'admin' %}
+  <div class="invite-panel">
+    <h2 class="invite-panel__title">Запросити нового учасника</h2>
+    <form class="invite-panel__form" method="POST"
+          action="{% url 'workspace-invite' workspace_pk=workspace.pk %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label class="form-label">Логін користувача</label>
+        <input type="text" name="username" class="form-control"
+               placeholder="введіть логін..." required autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Роль</label>
+        <select name="role" class="form-select">
+          <option value="member">Учасник</option>
+          <option value="admin">Адміністратор</option>
+          <option value="guest">Гість</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn--primary">Запросити</button>
+    </form>
+  </div>
+{% endif %}
+
+
+<div class="members-table-wrap">
+  <table class="members-table">
+    <thead>
+      <tr>
+        <th class="members-table__th">Користувач</th>
+        <th class="members-table__th">Email</th>
+        <th class="members-table__th">Роль</th>
+        <th class="members-table__th">Дата приєднання</th>
+        {% if user_role == 'owner' or user_role == 'admin' %}
+          <th class="members-table__th">Дії</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for member in members %}
+        <tr class="members-table__row {% if member.user == request.user %}members-table__row--me{% endif %}">
+
+          <td class="members-table__td">
+            <div class="member-row">
+              <div class="member-row__avatar">{{ member.user.username|first|upper }}</div>
+              <div class="member-row__info">
+                <span class="member-row__name">
+                  {{ member.user.get_full_name|default:member.user.username }}
+                </span>
+                <span class="member-row__username">@{{ member.user.username }}</span>
+              </div>
+              
+              {% if member.user == request.user %}
+                <span class="member-row__you-badge">Ви</span>
+              {% endif %}
+            </div>
+          </td>
+
+          <td class="members-table__td members-table__td--muted">
+            {{ member.user.email|default:"—" }}
+          </td>
+
+          <td class="members-table__td">
+            <span class="role-badge role-badge--{{ member.role }}">
+              {{ member.get_role_display }}
+            </span>
+          </td>
+
+          <td class="members-table__td members-table__td--muted">
+            {{ member.joined_at|date:"d.m.Y" }}
+          </td>
+
+          {% if user_role == 'owner' or user_role == 'admin' %}
+            <td class="members-table__td members-table__td--actions">
+              
+              {% if member.role != 'owner' and member.user != request.user %}
+                <form method="POST"
+                      action="{% url 'workspace-member-remove' workspace_pk=workspace.pk member_pk=member.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn--ghost btn--sm btn--danger"
+                          onclick="return confirm('Видалити @{{ member.user.username }} з простору?')">
+                    Видалити
+                  </button>
+                </form>
+              {% else %}
+                <span class="members-table__td--muted">—</span>
+              {% endif %}
+            </td>
+          {% endif %}
+
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

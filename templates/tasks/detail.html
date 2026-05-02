@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% block title %}{{ task.title }} — TaskFlow{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
+  <span class="topbar__crumb-sep">›</span>
+  <a href="{% url 'project-detail' pk=task.task_list.project.pk %}" class="topbar__crumb">
+    {{ task.task_list.project.icon }} {{ task.task_list.project.name }}
+  </a>
+  <span class="topbar__crumb-sep">›</span>
+  <span class="topbar__crumb topbar__crumb--current">{{ task.title|truncatechars:30 }}</span>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'task-update' pk=task.pk %}" class="btn btn--ghost btn--sm">✏️ Редагувати</a>
+  <a href="{% url 'task-delete' pk=task.pk %}" class="btn btn--ghost btn--sm btn--danger">🗑️</a>
+{% endblock %}
+
+{% block content %}
+<div class="task-detail-layout">
+
+
+  <div class="task-detail-main">
+
+    <div class="task-detail__header">
+      <div class="task-detail__priority-bar task-detail__priority-bar--{{ task.priority }}"></div>
+      <div class="task-detail__header-body">
+        <h1 class="task-detail__title
+          {% if task.status == 'done' %}task-detail__title--done{% endif %}">
+          {{ task.title }}
+        </h1>
+        <div class="task-detail__meta">
+          <span class="status-badge status-badge--{{ task.status }}">
+            {{ task.get_status_display }}
+          </span>
+          <span class="priority-badge priority-badge--{{ task.priority }}">
+            {{ task.get_priority_display }}
+          </span>
+          {% if task.is_overdue %}
+            <span class="overdue-badge">⚠️ Прострочено</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    
+    {% if task.description %}
+      <div class="task-detail__description">
+        <h2 class="task-detail__section-title">Опис</h2>
+        <div class="task-detail__desc-body">{{ task.description|linebreaks }}</div>
+      </div>
+    {% endif %}
+
+    
+    <div class="task-detail__subtasks">
+      <div class="task-detail__section-header">
+        <h2 class="task-detail__section-title">
+          Підзавдання
+          {% if task.subtask_count > 0 %}
+            <span class="task-detail__count">
+              {{ task.completed_subtask_count }}/{{ task.subtask_count }}
+            </span>
+          {% endif %}
+        </h2>
+        <a href="{% url 'task-create' list_pk=task.task_list.pk %}?parent={{ task.pk }}"
+           class="btn btn--ghost btn--sm">+ Підзавдання</a>
+      </div>
+
+      {% if subtasks %}
+        
+        {% if task.subtask_count > 0 %}
+          <div class="progress-bar progress-bar--lg">
+            <div class="progress-bar__fill"
+                 style="width: {% widthratio task.completed_subtask_count task.subtask_count 100 %}%">
+            </div>
+          </div>
+        {% endif %}
+
+        <ul class="subtask-list">
+          {% for subtask in subtasks %}
+            <li class="subtask-item {% if subtask.status == 'done' %}subtask-item--done{% endif %}">
+              <form method="POST" action="{% url 'task-status-update' pk=subtask.pk %}"
+                    class="subtask-item__check-form">
+                {% csrf_token %}
+                <input type="hidden" name="status"
+                       value="{% if subtask.status == 'done' %}todo{% else %}done{% endif %}" />
+                <button type="submit" class="subtask-item__checkbox" title="Змінити статус">
+                  {% if subtask.status == 'done' %}✅{% else %}⬜{% endif %}
+                </button>
+              </form>
+              <a href="{% url 'task-detail' pk=subtask.pk %}" class="subtask-item__title">
+                {{ subtask.title }}
+              </a>
+              <span class="status-badge status-badge--{{ subtask.status }} status-badge--xs">
+                {{ subtask.get_status_display }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="task-detail__empty-text">Підзавдань немає</p>
+      {% endif %}
+    </div>
+
+  
+    <div class="task-detail__comments" id="comments">
+      <h2 class="task-detail__section-title">
+        Коментарі <span class="task-detail__count">{{ comments|length }}</span>
+      </h2>
+
+      
+      <form class="comment-form" method="POST"
+            action="{% url 'comment-create' task_pk=task.pk %}">
+        {% csrf_token %}
+        <div class="comment-form__avatar">{{ request.user.username|first|upper }}</div>
+        <div class="comment-form__body">
+          <textarea name="content" class="form-control comment-form__input"
+                    rows="2" placeholder="Написати коментар..." required></textarea>
+          <div class="comment-form__actions">
+            <button type="submit" class="btn btn--primary btn--sm">Надіслати</button>
+          </div>
+        </div>
+      </form>
+
+      
+      <div class="comments-list">
+        {% for comment in comments %}
+          <div class="comment" id="comment-{{ comment.pk }}">
+
+            <div class="comment__avatar">{{ comment.author.username|first|upper }}</div>
+            <div class="comment__body">
+
+              <div class="comment__header">
+                <span class="comment__author">
+                  {{ comment.author.get_full_name|default:comment.author.username }}
+                </span>
+                <span class="comment__time">{{ comment.created_at|timesince }} тому</span>
+                {% if comment.is_edited %}
+                  <span class="comment__edited">(відредаговано)</span>
+                {% endif %}
+              </div>
+
+              <div class="comment__text">{{ comment.content|linebreaks }}</div>
+
+              <div class="comment__actions">
+            
+                <button class="comment__action-btn"
+                        onclick="replyTo({{ comment.pk }}, '{{ comment.author.username }}')">
+                  Відповісти
+                </button>
+
+                {% if comment.author == request.user %}
+                  <a href="{% url 'comment-update' pk=comment.pk %}"
+                     class="comment__action-btn">Редагувати</a>
+                  <a href="{% url 'comment-delete' pk=comment.pk %}"
+                     class="comment__action-btn comment__action-btn--danger">Видалити</a>
+                {% endif %}
+              </div>
+
+              
+              {% if comment.replies.all %}
+                <div class="comment-replies">
+                  {% for reply in comment.replies.all %}
+                    <div class="comment comment--reply" id="comment-{{ reply.pk }}">
+                      <div class="comment__avatar comment__avatar--sm">
+                        {{ reply.author.username|first|upper }}
+                      </div>
+                      <div class="comment__body">
+                        <div class="comment__header">
+                          <span class="comment__author">
+                            {{ reply.author.get_full_name|default:reply.author.username }}
+                          </span>
+                          <span class="comment__time">{{ reply.created_at|timesince }} тому</span>
+                          {% if reply.is_edited %}
+                            <span class="comment__edited">(відредаговано)</span>
+                          {% endif %}
+                        </div>
+                        <div class="comment__text">{{ reply.content|linebreaks }}</div>
+                        {% if reply.author == request.user %}
+                          <div class="comment__actions">
+                            <a href="{% url 'comment-update' pk=reply.pk %}"
+                               class="comment__action-btn">Редагувати</a>
+                            <a href="{% url 'comment-delete' pk=reply.pk %}"
+                               class="comment__action-btn comment__action-btn--danger">Видалити</a>
+                          </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+            </div>
+          </div>
+        {% empty %}
+          <p class="task-detail__empty-text">Коментарів ще немає. Будьте першим!</p>
+        {% endfor %}
+      </div>
+
+    </div>{# /comments #}
+
+  </div>{# /task-detail-main #}
+
+  
+  <aside class="task-detail-sidebar">
+
+    
+    <div class="task-sidebar__section">
+      <h3 class="task-sidebar__label">Статус</h3>
+      <form method="POST" action="{% url 'task-status-update' pk=task.pk %}">
+        {% csrf_token %}
+        <select name="status" class="form-select" onchange="this.form.submit()">
+          {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if task.status == value %}selected{% endif %}>
+              {{ label }}
+            </option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+    
+    <div class="task-sidebar__section">
+      <h3 class="task-sidebar__label">Виконавці</h3>
+      {% if task.assignees.all %}
+        <div class="task-sidebar__assignees">
+          {% for assignee in task.assignees.all %}
+            <div class="member-row member-row--sm">
+              <div class="member-row__avatar">{{ assignee.username|first|upper }}</div>
+              <span class="member-row__name">
+                {{ assignee.get_full_name|default:assignee.username }}
+              </span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="task-sidebar__empty">Не призначено</p>
+      {% endif %}
+    </div>
+
+    
+    <div class="task-sidebar__section">
+      <h3 class="task-sidebar__label">Терміни</h3>
+      <div class="task-sidebar__dates">
+        {% if task.start_date %}
+          <div class="task-sidebar__date-row">
+            <span class="task-sidebar__date-icon">▶️</span>
+            <span>Початок: {{ task.start_date|date:"d.m.Y H:i" }}</span>
+          </div>
+        {% endif %}
+        {% if task.due_date %}
+          <div class="task-sidebar__date-row {% if task.is_overdue %}text-danger{% endif %}">
+            <span class="task-sidebar__date-icon">🏁</span>
+            <span>Дедлайн: {{ task.due_date|date:"d.m.Y H:i" }}</span>
+          </div>
+        {% endif %}
+        {% if task.completed_at %}
+          <div class="task-sidebar__date-row text-success">
+            <span class="task-sidebar__date-icon">✅</span>
+            <span>Виконано: {{ task.completed_at|date:"d.m.Y H:i" }}</span>
+          </div>
+        {% endif %}
+        {% if not task.start_date and not task.due_date %}
+          <p class="task-sidebar__empty">Терміни не встановлені</p>
+        {% endif %}
+      </div>
+    </div>
+
+    
+    {% if task.estimated_hours %}
+      <div class="task-sidebar__section">
+        <h3 class="task-sidebar__label">Оціночний час</h3>
+        <span class="task-sidebar__value">⏱ {{ task.estimated_hours }} год</span>
+      </div>
+    {% endif %}
+
+    
+    <div class="task-sidebar__section">
+      <h3 class="task-sidebar__label">Теги</h3>
+      {% if task.tags.all %}
+        <div class="tag-list">
+          {% for tag in task.tags.all %}
+            <span class="tag-pill" style="background: {{ tag.color }}20; color: {{ tag.color }};">
+              {{ tag.name }}
+            </span>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="task-sidebar__empty">Немає тегів</p>
+      {% endif %}
+    </div>
+
+    
+    {% if task.parent_task %}
+      <div class="task-sidebar__section">
+        <h3 class="task-sidebar__label">Батьківське завдання</h3>
+        <a href="{% url 'task-detail' pk=task.parent_task.pk %}" class="task-sidebar__parent-link">
+          ⤴ {{ task.parent_task.title }}
+        </a>
+      </div>
+    {% endif %}
+
+    
+    <div class="task-sidebar__section">
+      <h3 class="task-sidebar__label">Активність</h3>
+      <ul class="activity-list">
+        {% for activity in activities %}
+          <li class="activity-item">
+            <span class="activity-item__user">{{ activity.user.username|default:"Система" }}</span>
+            <span class="activity-item__action">{{ activity.get_activity_type_display }}</span>
+            {% if activity.old_value and activity.new_value %}
+              <span class="activity-item__change">
+                «{{ activity.old_value }}» → «{{ activity.new_value }}»
+              </span>
+            {% endif %}
+            <span class="activity-item__time">{{ activity.created_at|timesince }} тому</span>
+          </li>
+        {% empty %}
+          <li class="task-sidebar__empty">Активності немає</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    
+    <div class="task-sidebar__section task-sidebar__section--meta">
+      <p class="task-sidebar__meta-row">
+        <span>Створив:</span>
+        <span>{{ task.created_by.username|default:"—" }}</span>
+      </p>
+      <p class="task-sidebar__meta-row">
+        <span>Створено:</span>
+        <span>{{ task.created_at|date:"d.m.Y H:i" }}</span>
+      </p>
+      <p class="task-sidebar__meta-row">
+        <span>Оновлено:</span>
+        <span>{{ task.updated_at|date:"d.m.Y H:i" }}</span>
+      </p>
+    </div>
+
+  
+    <div class="task-sidebar__section">
+      <form method="POST" action="{% url 'task-archive' pk=task.pk %}">
+        {% csrf_token %}
+        {% if task.is_archived %}
+          <input type="hidden" name="restore" value="1" />
+          <button type="submit" class="btn btn--ghost btn--full">📤 Розархівувати</button>
+        {% else %}
+          <button type="submit" class="btn btn--ghost btn--full btn--danger"
+                  onclick="return confirm('Архівувати завдання?')">
+            📦 Архівувати
+          </button>
+        {% endif %}
+      </form>
+    </div>
+
+  </aside>
+
+</div>{# /task-detail-layout #}
+
+
+<form id="replyForm" method="POST" action="{% url 'comment-create' task_pk=task.pk %}"
+      style="display:none;">
+  {% csrf_token %}
+  <input type="hidden" name="parent_comment" id="replyParentId" />
+  <input type="hidden" name="content" id="replyContent" />
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function replyTo(commentId, username) {
+    const textarea = document.querySelector('.comment-form__input');
+    textarea.focus();
+    textarea.value = `@${username} `;
+    let parentField = document.querySelector('input[name="parent_comment"]');
+    if (!parentField) {
+      parentField = document.createElement('input');
+      parentField.type = 'hidden';
+      parentField.name = 'parent_comment';
+      textarea.closest('form').appendChild(parentField);
+    }
+    parentField.value = commentId;
+    textarea.scrollIntoView({ behavior: 'smooth' });
+  }
+</script>
+{% endblock %}

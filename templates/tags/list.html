@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Теги — TaskFlow{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
+  <span class="topbar__crumb-sep">›</span>
+  <a href="{% url 'workspace-detail' pk=workspace.pk %}" class="topbar__crumb">
+    {{ workspace.name }}
+  </a>
+  <span class="topbar__crumb-sep">›</span>
+  <span class="topbar__crumb topbar__crumb--current">Теги</span>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'tag-create' workspace_pk=workspace.pk %}" class="btn btn--primary btn--sm">
+    + Новий тег
+  </a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">🏷️ Теги «{{ workspace.name }}»</h1>
+  <p class="page-subtitle">{{ tags|length }} тег{{ tags|length|pluralize:",и,ів" }}</p>
+</div>
+
+{% if tags %}
+  <div class="tags-grid">
+    {% for tag in tags %}
+      <div class="tag-card">
+        <div class="tag-card__preview">
+          <span class="tag-pill tag-pill--lg"
+                style="background: {{ tag.color }}20; color: {{ tag.color }}; border: 1px solid {{ tag.color }};">
+            {{ tag.name }}
+          </span>
+        </div>
+        <div class="tag-card__info">
+          <span class="tag-card__count">{{ tag.task_count }} завдань</span>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <span class="empty-state__icon">🏷️</span>
+    <h2 class="empty-state__title">Тегів ще немає</h2>
+    <a href="{% url 'tag-create' workspace_pk=workspace.pk %}" class="btn btn--primary">
+      Створити перший тег
+    </a>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} — TaskFlow{% endblock %}
+
+{% block breadcrumbs %}
+  <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
+  <span class="topbar__crumb-sep">›</span>
+  <a href="{% url 'workspace-detail' pk=project.workspace.pk %}"
+     class="topbar__crumb">{{ project.workspace.name }}</a>
+  <span class="topbar__crumb-sep">›</span>
+  <span class="topbar__crumb topbar__crumb--current">{{ project.icon }} {{ project.name }}</span>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'project-update' pk=project.pk %}" class="btn btn--ghost btn--sm">⚙️</a>
+{% endblock %}
+
+{% block content %}
+
+
+<div class="page-header">
+  <div class="page-header__left">
+    <h1 class="page-title" style="border-left: 4px solid {{ project.color }}; padding-left: 12px;">
+      {{ project.icon }} {{ project.name }}
+    </h1>
+    {% if project.description %}
+      <p class="page-subtitle">{{ project.description }}</p>
+    {% endif %}
+  </div>
+  <div class="project-stats">
+    <div class="stat-chip">
+      <span class="stat-chip__value">{{ stats.total }}</span>
+      <span class="stat-chip__label">всього</span>
+    </div>
+    <div class="stat-chip stat-chip--blue">
+      <span class="stat-chip__value">{{ stats.in_progress }}</span>
+      <span class="stat-chip__label">в процесі</span>
+    </div>
+    <div class="stat-chip stat-chip--green">
+      <span class="stat-chip__value">{{ stats.done }}</span>
+      <span class="stat-chip__label">виконано</span>
+    </div>
+    <div class="stat-chip stat-chip--red">
+      <span class="stat-chip__value">{{ stats.overdue }}</span>
+      <span class="stat-chip__label">прострочено</span>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div class="view-toggle">
+  <button class="view-toggle__btn view-toggle__btn--active" data-view="board">
+    📌 Дошка
+  </button>
+  <button class="view-toggle__btn" data-view="list">
+    📋 Список
+  </button>
+</div>
+
+
+
+<div class="kanban-board" id="kanbanBoard">
+
+  {% for task_list in task_lists %}
+    <div class="kanban-col" data-list-id="{{ task_list.pk }}">
+
+      
+      <div class="kanban-col__header">
+        <span class="kanban-col__name">{{ task_list.name }}</span>
+        <span class="kanban-col__count">{{ task_list.tasks.count }}</span>
+        <div class="kanban-col__actions">
+          <a href="{% url 'task-create' list_pk=task_list.pk %}"
+             class="kanban-col__add-btn" title="Додати завдання">+</a>
+          <a href="{% url 'tasklist-update' pk=task_list.pk %}"
+             class="kanban-col__edit-btn" title="Редагувати список">⋯</a>
+        </div>
+      </div>
+
+      
+      <div class="kanban-col__cards" data-list-id="{{ task_list.pk }}">
+        {% for task in task_list.tasks.all %}
+          {% if not task.is_archived %}
+            <div class="task-card" data-task-id="{{ task.pk }}"
+                 draggable="true">
+
+              
+              <div class="task-card__priority-bar task-card__priority-bar--{{ task.priority }}"></div>
+
+              <div class="task-card__body">
+                
+                <a href="{% url 'task-detail' pk=task.pk %}"
+                   class="task-card__title {% if task.status == 'done' %}task-card__title--done{% endif %}">
+                  {{ task.title }}
+                </a>
+
+                
+                {% if task.tags.all %}
+                  <div class="task-card__tags">
+                    {% for tag in task.tags.all %}
+                      <span class="tag-pill" style="background: {{ tag.color }}20; color: {{ tag.color }};">
+                        {{ tag.name }}
+                      </span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+      
+                {% if task.subtask_count > 0 %}
+                  <div class="task-card__subtasks">
+                    <div class="progress-bar">
+                      <div class="progress-bar__fill"
+                           style="width: {% widthratio task.completed_subtask_count task.subtask_count 100 %}%">
+                      </div>
+                    </div>
+                    <span class="task-card__subtask-count">
+                      {{ task.completed_subtask_count }}/{{ task.subtask_count }}
+                    </span>
+                  </div>
+                {% endif %}
+
+                
+                <div class="task-card__footer">
+                  <div class="task-card__assignees">
+                    {% for assignee in task.assignees.all|slice:":3" %}
+                      <span class="assignee-avatar" title="{{ assignee.username }}">
+                        {{ assignee.username|first|upper }}
+                      </span>
+                    {% endfor %}
+                  </div>
+                  {% if task.due_date %}
+                    <span class="task-card__due
+                      {% if task.is_overdue %}task-card__due--overdue{% endif %}">
+                      📅 {{ task.due_date|date:"d.m" }}
+                    </span>
+                  {% endif %}
+                  <div class="task-card__quick-actions">
+                    <a href="{% url 'task-update' pk=task.pk %}"
+                       class="task-card__action" title="Редагувати">✏️</a>
+                    <a href="{% url 'task-delete' pk=task.pk %}"
+                       class="task-card__action task-card__action--danger"
+                       title="Видалити">🗑️</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% empty %}
+          <div class="kanban-col__empty">Немає завдань</div>
+        {% endfor %}
+      </div>
+
+    
+      <a href="{% url 'task-create' list_pk=task_list.pk %}"
+         class="kanban-col__footer-btn">
+        + Додати завдання
+      </a>
+    </div>
+  {% endfor %}
+
+  <div class="kanban-col kanban-col--new">
+    <form method="POST" action="{% url 'tasklist-create' project_pk=project.pk %}"
+          class="kanban-col__new-form">
+      {% csrf_token %}
+      <input type="text" name="name" class="kanban-col__new-input"
+             placeholder="+ Новий список" required />
+      <button type="submit" class="btn btn--primary btn--sm">Додати</button>
+    </form>
+  </div>
+
+</div>{# /kanban-board #}
+
+
+
+<div class="list-view" id="listView" style="display:none;">
+  <table class="task-table">
+    <thead class="task-table__head">
+      <tr>
+        <th class="task-table__th">Завдання</th>
+        <th class="task-table__th">Список</th>
+        <th class="task-table__th">Статус</th>
+        <th class="task-table__th">Пріоритет</th>
+        <th class="task-table__th">Виконавці</th>
+        <th class="task-table__th">Термін</th>
+        <th class="task-table__th"></th>
+      </tr>
+    </thead>
+    <tbody class="task-table__body">
+      {% for task_list in task_lists %}
+        {% for task in task_list.tasks.all %}
+          {% if not task.is_archived %}
+            <tr class="task-table__row {% if task.is_overdue %}task-table__row--overdue{% endif %}">
+              <td class="task-table__td">
+                <a href="{% url 'task-detail' pk=task.pk %}" class="task-table__title">
+                  {{ task.title }}
+                </a>
+              </td>
+              <td class="task-table__td task-table__td--muted">{{ task_list.name }}</td>
+              <td class="task-table__td">
+                <span class="status-badge status-badge--{{ task.status }}">
+                  {{ task.get_status_display }}
+                </span>
+              </td>
+              <td class="task-table__td">
+                <span class="priority-badge priority-badge--{{ task.priority }}">
+                  {{ task.get_priority_display }}
+                </span>
+              </td>
+              <td class="task-table__td">
+                {% for assignee in task.assignees.all|slice:":2" %}
+                  <span class="assignee-avatar assignee-avatar--sm" title="{{ assignee.username }}">
+                    {{ assignee.username|first|upper }}
+                  </span>
+                {% endfor %}
+              </td>
+              <td class="task-table__td">
+                {% if task.due_date %}
+                  <span {% if task.is_overdue %}class="text-danger"{% endif %}>
+                    {{ task.due_date|date:"d.m.Y" }}
+                  </span>
+                {% else %}—{% endif %}
+              </td>
+              <td class="task-table__td task-table__td--actions">
+                <a href="{% url 'task-update' pk=task.pk %}" class="icon-btn">✏️</a>
+                <a href="{% url 'task-delete' pk=task.pk %}" class="icon-btn icon-btn--danger">🗑️</a>
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/kanban.js' %}"></script>
+{% endblock %}

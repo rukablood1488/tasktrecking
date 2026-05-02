@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Реєстрація — TaskFlow{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card auth-card--wide">
+
+    <div class="auth-card__header">
+      <span class="auth-card__logo">⚡</span>
+      <h1 class="auth-card__title">Створити акаунт</h1>
+      <p class="auth-card__subtitle">Приєднуйтесь до TaskFlow безкоштовно</p>
+    </div>
+
+    <form class="auth-form" method="POST" action="{% url 'register' %}">
+      {% csrf_token %}
+
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.first_name.id_for_label }}">Ім'я</label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}
+            <span class="form-error">{{ form.first_name.errors|join:", " }}</span>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.last_name.id_for_label }}">Прізвище</label>
+          {{ form.last_name }}
+          {% if form.last_name.errors %}
+            <span class="form-error">{{ form.last_name.errors|join:", " }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.username.id_for_label }}">Логін</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <span class="form-error">{{ form.username.errors|join:", " }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+        {{ form.email }}
+        {% if form.email.errors %}
+          <span class="form-error">{{ form.email.errors|join:", " }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.password1.id_for_label }}">Пароль</label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}
+          <span class="form-error">{{ form.password1.errors|join:", " }}</span>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.password2.id_for_label }}">Підтвердження паролю</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}
+          <span class="form-error">{{ form.password2.errors|join:", " }}</span>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--full">
+        Створити акаунт
+      </button>
+    </form>
+
+    <p class="auth-card__footer">
+      Вже є акаунт?
+      <a href="{% url 'login' %}" class="auth-card__link">Увійти</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

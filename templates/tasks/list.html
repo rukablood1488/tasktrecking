@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Мої завдання — TaskFlow{% endblock %}
+
+{% block breadcrumbs %}
+  <span class="topbar__crumb topbar__crumb--current">📋 Мої завдання</span>
+{% endblock %}
+
+{% block topbar_actions %}
+  <button class="btn btn--primary btn--sm" id="quickCreateBtn">+ Завдання</button>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Мої завдання</h1>
+  <p class="page-subtitle">{{ page_obj.paginator.count }} завдань знайдено</p>
+</div>
+
+
+<form class="filter-bar" method="GET" action="">
+
+  <div class="filter-bar__group">
+    <label class="filter-bar__label">Пошук</label>
+    <input type="search" name="q" class="form-control form-control--sm"
+           placeholder="Пошук..." value="{{ current_filters.q }}" />
+  </div>
+
+  <div class="filter-bar__group">
+    <label class="filter-bar__label">Статус</label>
+    <select name="status" class="form-select form-select--sm">
+      <option value="">Всі</option>
+      {% for value, label in status_choices %}
+        <option value="{{ value }}"
+          {% if current_filters.status == value %}selected{% endif %}>
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="filter-bar__group">
+    <label class="filter-bar__label">Пріоритет</label>
+    <select name="priority" class="form-select form-select--sm">
+      <option value="">Всі</option>
+      {% for value, label in priority_choices %}
+        <option value="{{ value }}"
+          {% if current_filters.priority == value %}selected{% endif %}>
+          {{ label }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="filter-bar__group">
+    <label class="filter-bar__label">Термін</label>
+    <select name="due_date" class="form-select form-select--sm">
+      <option value="">Будь-який</option>
+      <option value="overdue" {% if current_filters.due_date == 'overdue' %}selected{% endif %}>
+        Прострочені
+      </option>
+      <option value="today" {% if current_filters.due_date == 'today' %}selected{% endif %}>
+        Сьогодні
+      </option>
+      <option value="week" {% if current_filters.due_date == 'week' %}selected{% endif %}>
+        Наступні 7 днів
+      </option>
+    </select>
+  </div>
+
+  <div class="filter-bar__actions">
+    <button type="submit" class="btn btn--primary btn--sm">Застосувати</button>
+    <a href="{% url 'task-list' %}" class="btn btn--ghost btn--sm">Скинути</a>
+  </div>
+
+</form>
+
+
+{% if tasks %}
+  <div class="list-view">
+    <table class="task-table">
+      <thead class="task-table__head">
+        <tr>
+          <th class="task-table__th">Завдання</th>
+          <th class="task-table__th">Проект</th>
+          <th class="task-table__th">Статус</th>
+          <th class="task-table__th">Пріоритет</th>
+          <th class="task-table__th">Виконавці</th>
+          <th class="task-table__th">Термін</th>
+          <th class="task-table__th"></th>
+        </tr>
+      </thead>
+      <tbody class="task-table__body">
+        {% for task in tasks %}
+          <tr class="task-table__row
+            {% if task.is_overdue %}task-table__row--overdue{% endif %}
+            {% if task.status == 'done' %}task-table__row--done{% endif %}">
+
+            <td class="task-table__td">
+              <a href="{% url 'task-detail' pk=task.pk %}" class="task-table__title">
+                {{ task.title }}
+              </a>
+              
+              {% if task.subtask_count > 0 %}
+                <span class="task-table__sub-count">
+                  ⤷ {{ task.completed_subtask_count }}/{{ task.subtask_count }}
+                </span>
+              {% endif %}
+            </td>
+
+            <td class="task-table__td task-table__td--muted">
+              <a href="{% url 'project-detail' pk=task.task_list.project.pk %}"
+                 class="task-table__project-link">
+                {{ task.task_list.project.icon }} {{ task.task_list.project.name }}
+              </a>
+            </td>
+
+            <td class="task-table__td">
+              <span class="status-badge status-badge--{{ task.status }}">
+                {{ task.get_status_display }}
+              </span>
+            </td>
+
+            <td class="task-table__td">
+              <span class="priority-badge priority-badge--{{ task.priority }}">
+                {{ task.get_priority_display }}
+              </span>
+            </td>
+
+            <td class="task-table__td">
+              <div class="assignee-stack">
+                {% for assignee in task.assignees.all|slice:":3" %}
+                  <span class="assignee-avatar assignee-avatar--sm"
+                        title="{{ assignee.get_full_name|default:assignee.username }}">
+                    {{ assignee.username|first|upper }}
+                  </span>
+                {% endfor %}
+                {% if task.assignees.count > 3 %}
+                  <span class="assignee-avatar assignee-avatar--sm assignee-avatar--more">
+                    +{{ task.assignees.count|add:"-3" }}
+                  </span>
+                {% endif %}
+              </div>
+            </td>
+
+            <td class="task-table__td">
+              {% if task.due_date %}
+                <span {% if task.is_overdue %}class="text-danger"{% endif %}>
+                  {{ task.due_date|date:"d.m.Y" }}
+                </span>
+              {% else %}
+                <span class="task-table__td--muted">—</span>
+              {% endif %}
+            </td>
+
+            <td class="task-table__td task-table__td--actions">
+              <a href="{% url 'task-update' pk=task.pk %}" class="icon-btn" title="Редагувати">✏️</a>
+              <a href="{% url 'task-delete' pk=task.pk %}"
+                 class="icon-btn icon-btn--danger" title="Видалити">🗑️</a>
+            </td>
+
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  
+  {% if page_obj.has_other_pages %}
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?{% if current_filters %}{{ current_filters.urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}"
+           class="pagination__btn">‹</a>
+      {% endif %}
+
+      <span class="pagination__info">
+        Сторінка {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}
+      </span>
+
+      {% if page_obj.has_next %}
+        <a href="?{% if current_filters %}{{ current_filters.urlencode }}&{% endif %}page={{ page_obj.next_page_number }}"
+           class="pagination__btn">›</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+{% else %}
+  <div class="empty-state">
+    <span class="empty-state__icon">✅</span>
+    <h2 class="empty-state__title">Завдань не знайдено</h2>
+    <p class="empty-state__text">
+      {% if current_filters %}
+        Спробуйте змінити фільтри або
+        <a href="{% url 'task-list' %}">скиньте їх</a>
+      {% else %}
+        У вас ще немає жодного завдання
+      {% endif %}
+    </p>
+  </div>
+{% endif %}
+
+{% endblock %}

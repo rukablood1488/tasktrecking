@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Видалення — TaskFlow{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card form-card--danger">
+
+    <div class="form-card__header">
+      <span class="form-card__danger-icon">🗑️</span>
+      <h1 class="form-card__title">Підтвердити видалення</h1>
+    </div>
+
+    <p class="form-card__text">
+      Ви впевнені, що хочете видалити
+      <strong>«{{ object }}»</strong>?
+      <br />
+      <span class="form-card__warning">Цю дію неможливо скасувати.</span>
+    </p>
+
+    <form method="POST" class="form-actions">
+      {% csrf_token %}
+      <button type="submit" class="btn btn--danger">Так, видалити</button>
+      <a href="{{ cancel_url }}" class="btn btn--ghost">Скасувати</a>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
