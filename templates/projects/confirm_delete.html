@@ -16,7 +16,11 @@
   <div class="form-card form-card--danger">
 
     <div class="form-card__header">
-      <span class="form-card__danger-icon">⚠️</span>
+      <span class="form-card__danger-icon">
+        <svg class="icon icon--sm" aria-hidden="true">
+          <use href="#icon-alert-triangle"></use>
+        </svg>
+      </span>
       <h1 class="form-card__title">
         Видалити проект «{{ object.icon }} {{ object.name }}»?
       </h1>
@@ -37,7 +41,7 @@
     <form method="POST" class="form-actions">
       {% csrf_token %}
       <button type="submit" class="btn btn--danger">Так, видалити проект</button>
-      <a href="{% url 'project-detail' pk=object.pk %}" class="btn btn--ghost">Скасувати</a>
+      <a href="{% url 'workspace-detail' pk=object.workspace.pk %}" class="btn btn--ghost">Скасувати</a>
     </form>
 
   </div>

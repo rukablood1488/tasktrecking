@@ -8,7 +8,6 @@ from .models import Workspace, WorkspaceMember, Project, TaskList, Task, Comment
 
 
 class RegisterForm(UserCreationForm):
-
     email = forms.EmailField(
         required=True,
         label="Email",
@@ -17,40 +16,26 @@ class RegisterForm(UserCreationForm):
             "placeholder": "your@email.com",
         })
     )
-    first_name = forms.CharField(
-        max_length=50,
-        required=False,
-        label="Ім'я",
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Ім'я"})
-    )
-    last_name = forms.CharField(
-        max_length=50,
-        required=False,
-        label="Прізвище",
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Прізвище"})
-    )
-
+ 
     class Meta:
         model = User
-        fields = ["username", "first_name", "last_name", "email", "password1", "password2"]
-
+        fields = ["username", "email", "password1", "password2"]
+ 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         bootstrap_fields = ["username", "password1", "password2"]
         for field_name in bootstrap_fields:
             self.fields[field_name].widget.attrs.update({"class": "form-control"})
-
+ 
     def clean_email(self):
         email = self.cleaned_data.get("email")
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("Цей email вже використовується.")
         return email
-
+ 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
-        user.first_name = self.cleaned_data.get("first_name", "")
-        user.last_name = self.cleaned_data.get("last_name", "")
         if commit:
             user.save()
         return user
@@ -73,7 +58,6 @@ class CustomLoginForm(AuthenticationForm):
 
 
 class WorkspaceForm(forms.ModelForm):
-
     class Meta:
         model = Workspace
         fields = ["name", "description"]
@@ -146,10 +130,12 @@ class ProjectForm(forms.ModelForm):
             "name": forms.TextInput(attrs={
                 "class": "form-control",
                 "placeholder": "Назва проекту",
+                "autofocus": True,
             }),
             "description": forms.Textarea(attrs={
                 "class": "form-control",
                 "rows": 3,
+                "placeholder": "Короткий опис...",
             }),
             "color": forms.Select(attrs={"class": "form-select"}),
             "icon": forms.TextInput(attrs={
@@ -161,8 +147,6 @@ class ProjectForm(forms.ModelForm):
 
 
 class TaskListForm(forms.ModelForm):
-    """C/U колонки (TaskList)"""
-
     class Meta:
         model = TaskList
         fields = ["name", "description"]
@@ -170,10 +154,12 @@ class TaskListForm(forms.ModelForm):
             "name": forms.TextInput(attrs={
                 "class": "form-control",
                 "placeholder": "Назва списку",
+                "autofocus": True,
             }),
             "description": forms.Textarea(attrs={
                 "class": "form-control",
                 "rows": 2,
+                "placeholder": "Опис (необов'язково)",
             }),
         }
 
@@ -182,12 +168,14 @@ class TaskListForm(forms.ModelForm):
 
 
 class TaskForm(forms.ModelForm):
-
     due_date = forms.DateTimeField(
         required=False,
-        label="Термін виконання",
+        label="Дедлайн",
         widget=forms.DateTimeInput(
-            attrs={"class": "form-control", "type": "datetime-local"},
+            attrs={
+                "class": "form-control",
+                "type": "datetime-local",
+            },
             format="%Y-%m-%dT%H:%M",
         ),
         input_formats=["%Y-%m-%dT%H:%M"],
@@ -196,12 +184,15 @@ class TaskForm(forms.ModelForm):
         required=False,
         label="Дата початку",
         widget=forms.DateTimeInput(
-            attrs={"class": "form-control", "type": "datetime-local"},
+            attrs={
+                "class": "form-control",
+                "type": "datetime-local",
+            },
             format="%Y-%m-%dT%H:%M",
         ),
         input_formats=["%Y-%m-%dT%H:%M"],
     )
-
+ 
     class Meta:
         model = Task
         fields = [
@@ -238,34 +229,34 @@ class TaskForm(forms.ModelForm):
                 "step": "0.5",
                 "placeholder": "0.0",
             }),
-            
             "assignees": forms.CheckboxSelectMultiple(),
             "tags": forms.CheckboxSelectMultiple(),
             "parent_task": forms.Select(attrs={"class": "form-select"}),
         }
-
+ 
     def __init__(self, task_list=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+ 
         if task_list:
             workspace = task_list.project.workspace
-
+ 
             self.fields["assignees"].queryset = User.objects.filter(
                 workspaces=workspace
             )
-
+ 
             self.fields["tags"].queryset = Tag.objects.filter(workspace=workspace)
-
+ 
             task_qs = Task.objects.filter(task_list__project=task_list.project)
             if self.instance.pk:
                 task_qs = task_qs.exclude(pk=self.instance.pk)
             self.fields["parent_task"].queryset = task_qs
-
+ 
     def clean(self):
+        
         cleaned_data = super().clean()
         start_date = cleaned_data.get("start_date")
         due_date = cleaned_data.get("due_date")
-
+ 
         if start_date and due_date and start_date > due_date:
             raise forms.ValidationError(
                 "Дата початку не може бути пізніше терміну виконання."

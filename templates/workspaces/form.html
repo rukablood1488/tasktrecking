@@ -10,9 +10,15 @@
     <div class="form-card__header">
       <h1 class="form-card__title">
         {% if object %}
-          ✏️ Редагувати «{{ object.name }}»
+          <svg class="icon icon--sm" aria-hidden="true">
+            <use href="#icon-pencil"></use>
+          </svg>
+          Редагувати «{{ object.name }}»
         {% else %}
-          🏠 Новий простір
+          <svg class="icon icon--sm" aria-hidden="true">
+            <use href="#icon-home"></use>
+          </svg>
+          Новий простір
         {% endif %}
       </h1>
     </div>

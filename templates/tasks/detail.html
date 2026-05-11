@@ -12,8 +12,19 @@
 {% endblock %}
 
 {% block topbar_actions %}
-  <a href="{% url 'task-update' pk=task.pk %}" class="btn btn--ghost btn--sm">✏️ Редагувати</a>
-  <a href="{% url 'task-delete' pk=task.pk %}" class="btn btn--ghost btn--sm btn--danger">🗑️</a>
+  <a href="{% url 'task-update' pk=task.pk %}" class="btn btn--ghost btn--sm">
+    <svg class="icon icon--sm" aria-hidden="true">
+      <use href="#icon-pencil"></use>
+    </svg>
+    Редагувати
+  </a>
+
+  <a href="{% url 'task-delete' pk=task.pk %}"
+     class="btn btn--ghost btn--sm btn--danger">
+    <svg class="icon icon--sm" aria-hidden="true">
+      <use href="#icon-trash-2"></use>
+    </svg>
+  </a>
 {% endblock %}
 
 {% block content %}
@@ -37,7 +48,12 @@
             {{ task.get_priority_display }}
           </span>
           {% if task.is_overdue %}
-            <span class="overdue-badge">⚠️ Прострочено</span>
+            <span class="overdue-badge">
+              <svg class="icon icon--sm" aria-hidden="true">
+                <use href="#icon-alert-triangle"></use>
+              </svg>
+              Прострочено
+            </span>
           {% endif %}
         </div>
       </div>
@@ -84,8 +100,18 @@
                 {% csrf_token %}
                 <input type="hidden" name="status"
                        value="{% if subtask.status == 'done' %}todo{% else %}done{% endif %}" />
-                <button type="submit" class="subtask-item__checkbox" title="Змінити статус">
-                  {% if subtask.status == 'done' %}✅{% else %}⬜{% endif %}
+                <button type="submit"
+                    class="subtask-item__checkbox"
+                    title="Змінити статус">
+                  {% if subtask.status == 'done' %}
+                    <svg class="icon icon--sm" aria-hidden="true">
+                      <use href="#icon-check-circle"></use>
+                    </svg>
+                  {% else %}
+                    <svg class="icon icon--sm" aria-hidden="true">
+                      <use href="#icon-square"></use>
+                    </svg>
+                  {% endif %}
                 </button>
               </form>
               <a href="{% url 'task-detail' pk=subtask.pk %}" class="subtask-item__title">
@@ -244,19 +270,31 @@
       <div class="task-sidebar__dates">
         {% if task.start_date %}
           <div class="task-sidebar__date-row">
-            <span class="task-sidebar__date-icon">▶️</span>
+            <span class="task-sidebar__date-icon">
+              <svg class="icon icon--sm" aria-hidden="true">
+                <use href="#icon-play"></use>
+              </svg>
+            </span>
             <span>Початок: {{ task.start_date|date:"d.m.Y H:i" }}</span>
           </div>
         {% endif %}
         {% if task.due_date %}
           <div class="task-sidebar__date-row {% if task.is_overdue %}text-danger{% endif %}">
-            <span class="task-sidebar__date-icon">🏁</span>
+            <span class="task-sidebar__date-icon">
+              <svg class="icon icon--sm" aria-hidden="true">
+                <use href="#icon-flag"></use>
+              </svg>
+            </span>
             <span>Дедлайн: {{ task.due_date|date:"d.m.Y H:i" }}</span>
           </div>
         {% endif %}
         {% if task.completed_at %}
           <div class="task-sidebar__date-row text-success">
-            <span class="task-sidebar__date-icon">✅</span>
+            <span class="task-sidebar__date-icon">
+              <svg class="icon icon--sm" aria-hidden="true">
+                <use href="#icon-check-circle"></use>
+              </svg>
+            </span>
             <span>Виконано: {{ task.completed_at|date:"d.m.Y H:i" }}</span>
           </div>
         {% endif %}
@@ -343,11 +381,21 @@
         {% csrf_token %}
         {% if task.is_archived %}
           <input type="hidden" name="restore" value="1" />
-          <button type="submit" class="btn btn--ghost btn--full">📤 Розархівувати</button>
+
+          <button type="submit" class="btn btn--ghost btn--full">
+            <svg class="icon icon--sm" aria-hidden="true">
+              <use href="#icon-upload"></use>
+            </svg>
+            Розархівувати
+          </button>
         {% else %}
-          <button type="submit" class="btn btn--ghost btn--full btn--danger"
-                  onclick="return confirm('Архівувати завдання?')">
-            📦 Архівувати
+          <button type="submit"
+              class="btn btn--ghost btn--full btn--danger"
+              onclick="return confirm('Архівувати завдання?')">
+            <svg class="icon icon--sm" aria-hidden="true">
+              <use href="#icon-archive"></use>
+            </svg>
+            Архівувати
           </button>
         {% endif %}
       </form>

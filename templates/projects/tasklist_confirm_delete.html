@@ -6,14 +6,18 @@
   <div class="form-card form-card--danger">
 
     <div class="form-card__header">
-      <span class="form-card__danger-icon">⚠️</span>
+      <span class="form-card__danger-icon">
+        <svg class="icon icon--sm" aria-hidden="true">
+          <use href="#icon-alert-triangle"></use>
+        </svg>
+      </span>
       <h1 class="form-card__title">Видалити список «{{ object.name }}»?</h1>
     </div>
 
     <div class="form-card__warning-box">
       <p>
         Буде видалено <strong>{{ object.tasks.count }}</strong>
-        завдань{{ object.tasks.count|pluralize:" (1 завдання),ь" }} разом зі списком.
+        завдан{{ object.tasks.count|pluralize:" (1 завдання),ь" }} разом зі списком.
       </p>
     </div>
 

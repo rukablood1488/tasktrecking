@@ -5,72 +5,75 @@
   <span class="topbar__crumb topbar__crumb--current">Простори</span>
 {% endblock %}
 
-{% block topbar_actions %}
-  <a href="{% url 'workspace-create' %}" class="btn btn--primary btn--sm">
-    + Новий простір
-  </a>
-{% endblock %}
+
 
 {% block content %}
 <div class="page-header">
-  <h1 class="page-title">Мої простори</h1>
-  <p class="page-subtitle">Оберіть простір або створіть новий</p>
+  <div class="page-header__left">
+    <h1 class="page-title">Мої простори</h1>
+  </div>
 </div>
 
 {% if workspaces %}
   <div class="workspace-grid">
     {% for workspace in workspaces %}
-      <a href="{% url 'workspace-detail' pk=workspace.pk %}" class="workspace-card">
+      <div class="workspace-card">
 
-        
-        <div class="workspace-card__avatar">
-          {{ workspace.name|first|upper }}
-        </div>
-
-        <div class="workspace-card__body">
-          <h2 class="workspace-card__name">{{ workspace.name }}</h2>
-          {% if workspace.description %}
-            <p class="workspace-card__desc">{{ workspace.description|truncatechars:80 }}</p>
-          {% endif %}
-
-          <div class="workspace-card__meta">
-            <span class="workspace-card__stat">
-              📁 {{ workspace.project_count }} проект{{ workspace.project_count|pluralize:",и,ів" }}
-            </span>
-            <span class="workspace-card__stat">
-              👥 {{ workspace.member_count }} учасник{{ workspace.member_count|pluralize:",и,ів" }}
-            </span>
+        {# Клікабельна зона — веде на workspace #}
+        <a href="{% url 'workspace-detail' pk=workspace.pk %}" class="workspace-card__link">
+          <div class="workspace-card__avatar">{{ workspace.name|first|upper }}</div>
+          <div class="workspace-card__body">
+            <h2 class="workspace-card__name">{{ workspace.name }}</h2>
+            {% if workspace.description %}
+              <p class="workspace-card__desc">{{ workspace.description|truncatechars:80 }}</p>
+            {% endif %}
+            <div class="workspace-card__meta">
+              <span class="workspace-card__stat">
+                <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-folder"/></svg>
+                {{ workspace.project_count }} проект{{ workspace.project_count|pluralize:",и,ів" }}
+              </span>
+              <span class="workspace-card__stat">
+                <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-users"/></svg>
+                {{ workspace.member_count }} учасник{{ workspace.member_count|pluralize:",и,ів" }}
+              </span>
+            </div>
           </div>
-        </div>
-
-        
-        {% with member=workspace.workspacemember_set.get %}
           {% if workspace.owner == request.user %}
             <span class="workspace-card__badge workspace-card__badge--owner">Власник</span>
           {% endif %}
-        {% endwith %}
+        </a>
 
-      </a>
+        {# Футер картки з кнопками дій #}
+        <div class="workspace-card__footer">
+          {% if workspace.owner == request.user %}
+            <a href="{% url 'workspace-update' pk=workspace.pk %}"
+               class="workspace-card__action-btn" title="Редагувати">
+              <svg class="icon icon--sm"><use href="#icon-pencil"/></svg>
+              Редагувати
+            </a>
+            <a href="{% url 'workspace-delete' pk=workspace.pk %}"
+               class="workspace-card__action-btn workspace-card__action-btn--danger" title="Видалити">
+              <svg class="icon icon--sm"><use href="#icon-trash-2"/></svg>
+              Видалити
+            </a>
+          {% endif %}
+        </div>
+
+      </div>
     {% endfor %}
 
-    
     <a href="{% url 'workspace-create' %}" class="workspace-card workspace-card--new">
-      <span class="workspace-card__plus">+</span>
+      <svg class="icon icon--lg" aria-hidden="true"><use href="#icon-plus"/></svg>
       <span class="workspace-card__new-text">Новий простір</span>
     </a>
   </div>
 
 {% else %}
-  
   <div class="empty-state">
-    <span class="empty-state__icon">🚀</span>
+    <svg class="icon" style="width:48px;height:48px;opacity:.3" aria-hidden="true"><use href="#icon-layout-grid"/></svg>
     <h2 class="empty-state__title">У вас ще немає просторів</h2>
-    <p class="empty-state__text">
-      Створіть перший простір, щоб почати керувати завданнями
-    </p>
-    <a href="{% url 'workspace-create' %}" class="btn btn--primary">
-      Створити простір
-    </a>
+    <p class="empty-state__text">Створіть перший простір щоб почати керувати завданнями</p>
+    <a href="{% url 'workspace-create' %}" class="btn btn--primary">Створити простір</a>
   </div>
 {% endif %}
 {% endblock %}

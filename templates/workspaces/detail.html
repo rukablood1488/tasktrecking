@@ -3,29 +3,35 @@
 
 {% block breadcrumbs %}
   <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
-  <span class="topbar__crumb-sep">›</span>
+  <span class="topbar__crumb-sep">
+    <svg class="icon icon--sm"><use href="#icon-chevron-right"/></svg>
+  </span>
   <span class="topbar__crumb topbar__crumb--current">{{ workspace.name }}</span>
 {% endblock %}
 
 {% block topbar_actions %}
   {% if user_role == 'owner' or user_role == 'admin' %}
     <a href="{% url 'workspace-update' pk=workspace.pk %}" class="btn btn--ghost btn--sm">
-      ✏️ Налаштування
+      <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-pencil"/></svg>
+      Редагувати
+    </a>
+  {% endif %}
+  {% if workspace.owner == request.user %}
+    <a href="{% url 'workspace-delete' pk=workspace.pk %}" class="btn btn--ghost btn--sm btn--danger">
+      <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-trash-2"/></svg>
+      Видалити
     </a>
   {% endif %}
   <a href="{% url 'project-create' workspace_pk=workspace.pk %}" class="btn btn--primary btn--sm">
-    + Новий проект
+    <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-plus"/></svg>
+    Новий проект
   </a>
 {% endblock %}
 
 {% block content %}
-
-
 <div class="page-header">
   <div class="page-header__left">
-    <div class="workspace-avatar workspace-avatar--lg">
-      {{ workspace.name|first|upper }}
-    </div>
+    <div class="workspace-avatar--lg">{{ workspace.name|first|upper }}</div>
     <div>
       <h1 class="page-title">{{ workspace.name }}</h1>
       {% if workspace.description %}
@@ -35,76 +41,80 @@
   </div>
 </div>
 
-
-
-
 <div class="tabs" id="workspaceTabs">
   <button class="tabs__tab tabs__tab--active" data-target="tab-projects">
-    📁 Проекти ({{ projects|length }})
+    <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-folder"/></svg>
+    Проекти ({{ projects|length }})
   </button>
   <button class="tabs__tab" data-target="tab-members">
-    👥 Учасники ({{ members|length }})
+    <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-users"/></svg>
+    Учасники ({{ members|length }})
   </button>
 </div>
-
 
 <div class="tab-panel tab-panel--active" id="tab-projects">
   {% if projects %}
     <div class="project-grid">
       {% for project in projects %}
-        <a href="{% url 'project-detail' pk=project.pk %}" class="project-card">
-          <div class="project-card__header" style="border-left: 4px solid {{ project.color }};">
-            <span class="project-card__icon">{{ project.icon }}</span>
-            <h3 class="project-card__name">{{ project.name }}</h3>
-          </div>
+        {# div замість <a> — бо вкладені <a> є невалідним HTML #}
+        <div class="project-card">
 
-          {% if project.description %}
-            <p class="project-card__desc">{{ project.description|truncatechars:60 }}</p>
-          {% endif %}
+          {# Клікабельна зона — весь верх картки веде на проект #}
+          <a href="{% url 'project-detail' pk=project.pk %}" class="project-card__link">
+            <div class="project-card__header" style="border-left:4px solid {{ project.color }};">
+              <span class="project-card__icon">
+                <svg class="icon icon--md" aria-hidden="true"><use href="#icon-folder"/></svg>
+              </span>
+              <h3 class="project-card__name">{{ project.name }}</h3>
+            </div>
+            {% if project.description %}
+              <p class="project-card__desc">{{ project.description|truncatechars:60 }}</p>
+            {% endif %}
+          </a>
 
           <div class="project-card__footer">
             <span class="project-card__stat">
-              📋 {{ project.task_count }} завдань
+              <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-clipboard-list"/></svg>
+              {{ project.task_count }} завдань
             </span>
             {% if user_role == 'owner' or user_role == 'admin' %}
               <div class="project-card__actions">
                 <a href="{% url 'project-update' pk=project.pk %}"
-                   class="project-card__action-btn"
-                   onclick="event.preventDefault(); event.stopPropagation();">✏️</a>
+                   class="project-card__action-btn" title="Редагувати">
+                  <svg class="icon icon--sm"><use href="#icon-pencil"/></svg>
+                </a>
                 <a href="{% url 'project-delete' pk=project.pk %}"
-                   class="project-card__action-btn project-card__action-btn--danger"
-                   onclick="event.preventDefault(); event.stopPropagation();">🗑️</a>
+                   class="project-card__action-btn project-card__action-btn--danger" title="Видалити">
+                  <svg class="icon icon--sm"><use href="#icon-trash-2"/></svg>
+                </a>
               </div>
             {% endif %}
           </div>
-        </a>
-      {% endfor %}
 
-      <a href="{% url 'project-create' workspace_pk=workspace.pk %}"
-         class="project-card project-card--new">
-        <span class="project-card__plus">+</span>
+        </div>
+      {% endfor %}
+      <a href="{% url 'project-create' workspace_pk=workspace.pk %}" class="project-card project-card--new">
+        <svg class="icon icon--lg" aria-hidden="true"><use href="#icon-plus"/></svg>
         <span>Новий проект</span>
       </a>
     </div>
-
   {% else %}
     <div class="empty-state empty-state--sm">
-      <span class="empty-state__icon">📁</span>
+      <svg class="icon" style="width:36px;height:36px;opacity:.3"><use href="#icon-folder"/></svg>
       <h3 class="empty-state__title">Немає проектів</h3>
-      <a href="{% url 'project-create' workspace_pk=workspace.pk %}" class="btn btn--primary">
-        Створити перший проект
-      </a>
+      <a href="{% url 'project-create' workspace_pk=workspace.pk %}" class="btn btn--primary">Створити перший проект</a>
     </div>
   {% endif %}
 </div>
 
-
-<div class="tab-panel" id="tab-members">
-
+<div class="tab-panel" id="tab-members" style="display:none;">
   {% if user_role == 'owner' or user_role == 'admin' %}
-    <div class="members-invite">
-      <h3 class="members-invite__title">Запросити учасника</h3>
-      <form class="members-invite__form" method="POST"
+    <div class="invite-panel">
+      <h3 class="invite-panel__title">
+        <svg class="icon icon--md" aria-hidden="true"><use href="#icon-user-plus"/></svg>
+        Запросити учасника
+      </h3>
+      <form class="invite-panel__form" method="POST"
             action="{% url 'workspace-invite' workspace_pk=workspace.pk %}">
         {% csrf_token %}
         <input type="text" name="username" class="form-control"
@@ -119,32 +129,59 @@
     </div>
   {% endif %}
 
-  <div class="members-list">
-    {% for member in members %}
-      <div class="member-row">
-        <div class="member-row__avatar">{{ member.user.username|first|upper }}</div>
-        <div class="member-row__info">
-          <span class="member-row__name">
-            {{ member.user.get_full_name|default:member.user.username }}
-          </span>
-          <span class="member-row__username">@{{ member.user.username }}</span>
-        </div>
-        <span class="member-row__role member-row__role--{{ member.role }}">
-          {{ member.get_role_display }}
-        </span>
-        {% if user_role == 'owner' and member.user != request.user %}
-          <form method="POST"
-                action="{% url 'workspace-member-remove' workspace_pk=workspace.pk member_pk=member.pk %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn--ghost btn--sm btn--danger"
-                    onclick="return confirm('Видалити учасника?')">
-              Видалити
-            </button>
-          </form>
-        {% endif %}
-      </div>
-    {% endfor %}
+  <div class="members-table-wrap">
+    <table class="members-table">
+      <thead>
+        <tr>
+          <th class="members-table__th">Користувач</th>
+          <th class="members-table__th">Email</th>
+          <th class="members-table__th">Роль</th>
+          <th class="members-table__th">Дата приєднання</th>
+          {% if user_role == 'owner' or user_role == 'admin' %}
+            <th class="members-table__th">Дії</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for member in members %}
+          <tr class="members-table__row {% if member.user == request.user %}members-table__row--me{% endif %}">
+            <td class="members-table__td">
+              <div class="member-row">
+                <div class="member-row__avatar">{{ member.user.username|first|upper }}</div>
+                <div class="member-row__info">
+                  <span class="member-row__name">{{ member.user.get_full_name|default:member.user.username }}</span>
+                  <span class="member-row__username">@{{ member.user.username }}</span>
+                </div>
+                {% if member.user == request.user %}
+                  <span class="member-row__you-badge">Ви</span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="members-table__td members-table__td--muted">{{ member.user.email|default:"—" }}</td>
+            <td class="members-table__td">
+              <span class="role-badge role-badge--{{ member.role }}">{{ member.get_role_display }}</span>
+            </td>
+            <td class="members-table__td members-table__td--muted">{{ member.joined_at|date:"d.m.Y" }}</td>
+            {% if user_role == 'owner' or user_role == 'admin' %}
+              <td class="members-table__td members-table__td--actions">
+                {% if member.role != 'owner' and member.user != request.user %}
+                  <form method="POST"
+                        action="{% url 'workspace-member-remove' workspace_pk=workspace.pk member_pk=member.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--ghost btn--sm btn--danger"
+                            onclick="return confirm('Видалити @{{ member.user.username }}?')">
+                      Видалити
+                    </button>
+                  </form>
+                {% else %}
+                  <span class="members-table__td--muted">—</span>
+                {% endif %}
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 </div>
-
 {% endblock %}
