@@ -1,19 +1,19 @@
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, View
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.http import JsonResponse, HttpResponseForbidden
+from django.http import JsonResponse
 from django.contrib import messages
 
 from .models import Workspace, WorkspaceMember, Project, TaskList, Task, TaskActivity
 from .mixins import WorkspaceMemberMixin, WorkspaceAdminMixin
 
 
+# WorkspaceMember ─────────────────────────────────────
 
 
 class WorkspaceMemberListView(WorkspaceMemberMixin, ListView):
-    
     model = WorkspaceMember
     template_name = "workspaces/members.html"
     context_object_name = "members"
@@ -47,21 +47,15 @@ class WorkspaceMemberInviteView(WorkspaceAdminMixin, View):
             messages.error(request, f"Користувача «{username}» не знайдено.")
             return redirect(reverse("workspace-detail", kwargs={"pk": workspace_pk}))
 
-
         if WorkspaceMember.objects.filter(workspace=workspace, user=user).exists():
             messages.warning(request, f"«{username}» вже є учасником цього простору.")
             return redirect(reverse("workspace-detail", kwargs={"pk": workspace_pk}))
-
 
         valid_roles = [r[0] for r in WorkspaceMember.Role.choices]
         if role not in valid_roles:
             role = WorkspaceMember.Role.MEMBER
 
-        WorkspaceMember.objects.create(
-            workspace=workspace,
-            user=user,
-            role=role,
-        )
+        WorkspaceMember.objects.create(workspace=workspace, user=user, role=role)
         messages.success(request, f"«{username}» додано до простору з роллю «{role}».")
         return redirect(reverse("workspace-detail", kwargs={"pk": workspace_pk}))
 
@@ -70,11 +64,7 @@ class WorkspaceMemberRemoveView(WorkspaceAdminMixin, View):
 
     def post(self, request, workspace_pk, member_pk):
         workspace = self.get_workspace()
-        member = get_object_or_404(
-            WorkspaceMember,
-            pk=member_pk,
-            workspace=workspace
-        )
+        member = get_object_or_404(WorkspaceMember, pk=member_pk, workspace=workspace)
 
         if member.role == WorkspaceMember.Role.OWNER:
             messages.error(request, "Власника простору не можна видалити.")
@@ -94,8 +84,7 @@ class WorkspaceMemberRemoveView(WorkspaceAdminMixin, View):
         return redirect(reverse("workspace-detail", kwargs={"pk": workspace_pk}))
 
 
-
-
+# TaskList ────────────────────────────────────────────
 
 
 class TaskListCreateView(LoginRequiredMixin, View):
@@ -104,7 +93,7 @@ class TaskListCreateView(LoginRequiredMixin, View):
         project = get_object_or_404(
             Project,
             pk=project_pk,
-            workspace__members=request.user 
+            workspace__members=request.user
         )
         name = request.POST.get("name", "").strip()
 
@@ -117,20 +106,18 @@ class TaskListCreateView(LoginRequiredMixin, View):
         ).order_by("-position").values_list("position", flat=True).first()
         new_position = (last_position or 0) + 1
 
-        TaskList.objects.create(
-            project=project,
-            name=name,
-            position=new_position,
-        )
+        TaskList.objects.create(project=project, name=name, position=new_position)
         messages.success(request, f"Список «{name}» створено.")
         return redirect(reverse("project-detail", kwargs={"pk": project_pk}))
 
 
 class TaskListUpdateView(LoginRequiredMixin, UpdateView):
-    
     model = TaskList
-    fields = ["name", "description"]
     template_name = "projects/tasklist_form.html"
+
+    def get_form_class(self):
+        from .forms import TaskListForm
+        return TaskListForm
 
     def dispatch(self, request, *args, **kwargs):
         task_list = self.get_object()
@@ -139,26 +126,31 @@ class TaskListUpdateView(LoginRequiredMixin, UpdateView):
             workspace=workspace, user=request.user
         ).exists()
         if not is_member:
-            return HttpResponseForbidden("Немає доступу.")
+            messages.error(request, "Немає доступу.")
+            referer = request.META.get("HTTP_REFERER")
+            return redirect(referer) if referer else redirect("workspace-list")
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse("project-detail", kwargs={"pk": self.object.project.pk})
 
 
-class TaskListDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    
+class TaskListDeleteView(LoginRequiredMixin, DeleteView):
     model = TaskList
     template_name = "projects/tasklist_confirm_delete.html"
 
-    def test_func(self):
+    def dispatch(self, request, *args, **kwargs):
         task_list = self.get_object()
         workspace = task_list.project.workspace
-        return WorkspaceMember.objects.filter(
+        is_admin = WorkspaceMember.objects.filter(
             workspace=workspace,
-            user=self.request.user,
+            user=request.user,
             role__in=[WorkspaceMember.Role.OWNER, WorkspaceMember.Role.ADMIN]
         ).exists()
+        if not is_admin:
+            messages.error(request, "Лише адміністратор може видаляти списки.")
+            return redirect(reverse("project-detail", kwargs={"pk": task_list.project.pk}))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse("project-detail", kwargs={"pk": self.object.project.pk})
@@ -168,21 +160,18 @@ class TaskListDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return super().form_valid(form)
 
 
-
-
+# Task extra Views ──────────────────────────────────────────
 
 
 class TaskReorderView(LoginRequiredMixin, View):
-    
 
     def post(self, request, pk):
         task = get_object_or_404(
-            Task,
-            pk=pk,
+            Task, pk=pk,
             task_list__project__workspace__members=request.user
         )
 
-        new_list_pk = request.POST.get("list_pk")
+        new_list_pk  = request.POST.get("list_pk")
         new_position = request.POST.get("position")
 
         try:
@@ -190,11 +179,9 @@ class TaskReorderView(LoginRequiredMixin, View):
         except (TypeError, ValueError):
             return JsonResponse({"error": "Невірна позиція."}, status=400)
 
-
         if new_list_pk and int(new_list_pk) != task.task_list_id:
             new_list = get_object_or_404(
-                TaskList,
-                pk=new_list_pk,
+                TaskList, pk=new_list_pk,
                 project__workspace__members=request.user
             )
             task.task_list = new_list
@@ -211,12 +198,10 @@ class TaskReorderView(LoginRequiredMixin, View):
 
 
 class TaskArchiveView(LoginRequiredMixin, View):
-    
 
     def post(self, request, pk):
         task = get_object_or_404(
-            Task,
-            pk=pk,
+            Task, pk=pk,
             task_list__project__workspace__members=request.user
         )
 
@@ -229,9 +214,10 @@ class TaskArchiveView(LoginRequiredMixin, View):
         is_creator = task.created_by == request.user
 
         if not (is_admin or is_creator):
-            return HttpResponseForbidden("Недостатньо прав.")
+            messages.error(request, "Лише автор або адміністратор може архівувати завдання.")
+            referer = request.META.get("HTTP_REFERER")
+            return redirect(referer) if referer else redirect("workspace-list")
 
-        
         restore = request.POST.get("restore") == "1"
         task.is_archived = not restore
         task.save(update_fields=["is_archived", "updated_at"])
@@ -246,11 +232,7 @@ class TaskArchiveView(LoginRequiredMixin, View):
         action = "розархівовано" if restore else "архівовано"
         messages.success(request, f"Завдання «{task.title}» {action}.")
 
-        
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return JsonResponse({
-                "success": True,
-                "is_archived": task.is_archived,
-            })
+            return JsonResponse({"success": True, "is_archived": task.is_archived})
 
         return redirect(reverse("project-detail", kwargs={"pk": task.task_list.project.pk}))

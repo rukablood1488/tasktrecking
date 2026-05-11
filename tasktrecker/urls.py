@@ -10,47 +10,51 @@ auth_patterns = [
 ]
 
 
+landing_pattern = [
+    path("", views.LandingView.as_view(), name="landing"),
+]
+
 
 workspace_patterns = [
-    path("",
+    path("workspaces/",
          views.WorkspaceListView.as_view(),
          name="workspace-list"),
 
-    path("create/",
+    path("workspaces/create/",
          views.WorkspaceCreateView.as_view(),
          name="workspace-create"),
 
-    path("<int:pk>/",
+    path("workspaces/<int:pk>/",
          views.WorkspaceDetailView.as_view(),
          name="workspace-detail"),
 
-    path("<int:pk>/edit/",
+    path("workspaces/<int:pk>/edit/",
          views.WorkspaceUpdateView.as_view(),
          name="workspace-update"),
 
-    path("<int:pk>/delete/",
+    path("workspaces/<int:pk>/delete/",
          views.WorkspaceDeleteView.as_view(),
          name="workspace-delete"),
 
-
-    path("<int:workspace_pk>/members/",
+    
+    path("workspaces/<int:workspace_pk>/members/",
          views_extra.WorkspaceMemberListView.as_view(),
          name="workspace-members"),
 
-    path("<int:workspace_pk>/members/invite/",
+    path("workspaces/<int:workspace_pk>/members/invite/",
          views_extra.WorkspaceMemberInviteView.as_view(),
          name="workspace-invite"),
 
-    path("<int:workspace_pk>/members/<int:member_pk>/remove/",
+    path("workspaces/<int:workspace_pk>/members/<int:member_pk>/remove/",
          views_extra.WorkspaceMemberRemoveView.as_view(),
          name="workspace-member-remove"),
 
     
-    path("<int:workspace_pk>/tags/",
+    path("workspaces/<int:workspace_pk>/tags/",
          views.TagListView.as_view(),
          name="tag-list"),
 
-    path("<int:workspace_pk>/tags/create/",
+    path("workspaces/<int:workspace_pk>/tags/create/",
          views.TagCreateView.as_view(),
          name="tag-create"),
 ]
@@ -58,7 +62,7 @@ workspace_patterns = [
 
 
 project_patterns = [
-    path("<int:workspace_pk>/projects/create/",
+    path("workspaces/<int:workspace_pk>/projects/create/",
          views.ProjectCreateView.as_view(),
          name="project-create"),
 
@@ -91,35 +95,35 @@ project_patterns = [
 
 
 task_patterns = [
-    path("",
+    path("tasks/",
          views.TaskListView.as_view(),
          name="task-list"),
 
-    path("create/<int:list_pk>/",
+    path("tasks/create/<int:list_pk>/",
          views.TaskCreateView.as_view(),
          name="task-create"),
 
-    path("<int:pk>/",
+    path("tasks/<int:pk>/",
          views.TaskDetailView.as_view(),
          name="task-detail"),
 
-    path("<int:pk>/edit/",
+    path("tasks/<int:pk>/edit/",
          views.TaskUpdateView.as_view(),
          name="task-update"),
 
-    path("<int:pk>/delete/",
+    path("tasks/<int:pk>/delete/",
          views.TaskDeleteView.as_view(),
          name="task-delete"),
 
-    path("<int:pk>/status/",
+    path("tasks/<int:pk>/status/",
          views.TaskStatusUpdateView.as_view(),
          name="task-status-update"),
 
-    path("<int:pk>/reorder/",
+    path("tasks/<int:pk>/reorder/",
          views_extra.TaskReorderView.as_view(),
          name="task-reorder"),
 
-    path("<int:pk>/archive/",
+    path("tasks/<int:pk>/archive/",
          views_extra.TaskArchiveView.as_view(),
          name="task-archive"),
 ]
@@ -144,6 +148,7 @@ comment_patterns = [
 
 urlpatterns = (
     auth_patterns
+    + landing_pattern
     + workspace_patterns
     + project_patterns
     + task_patterns

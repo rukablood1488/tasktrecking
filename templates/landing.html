@@ -1,0 +1,244 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskFlow — Керуй завданнями як команда</title>
+  <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/landing.css' %}" />
+</head>
+<body class="landing-body">
+
+  {% include "partials/icons.html" %}
+
+  <header class="landing-nav">
+    <div class="landing-nav__inner">
+      <a href="/" class="landing-nav__logo">
+        <span class="landing-nav__logo-icon">
+          <svg class="icon icon--md" aria-hidden="true"><use href="#icon-zap"/></svg>
+        </span>
+        TaskFlow
+      </a>
+      <div class="landing-nav__actions">
+        <a href="{% url 'login' %}" class="btn btn--ghost btn--sm">Увійти</a>
+        <a href="{% url 'register' %}" class="btn btn--primary btn--sm">Почати безкоштовно</a>
+      </div>
+    </div>
+  </header>
+
+
+  <section class="hero">
+    <div class="hero__inner">
+      <div class="hero__badge">
+        <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-zap"/></svg>
+        Управління проектами нового покоління
+      </div>
+      <h1 class="hero__title">
+        Організуй роботу.<br />
+        <span class="hero__title-accent">Виконуй вчасно.</span>
+      </h1>
+      <p class="hero__subtitle">
+        TaskFlow — система управління завданнями для команд та особистої продуктивності.
+        Kanban-дошки, пріоритети, коментарі та ролі — все в одному місці.
+      </p>
+      <div class="hero__cta">
+        <a href="{% url 'register' %}" class="btn btn--primary hero__cta-main">
+          Розпочати безкоштовно
+          <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-arrow-right"/></svg>
+        </a>
+      </div>
+    </div>
+
+    
+    <div class="hero__preview">
+      <div class="hero__preview-bar">
+        <span class="hero__preview-dot hero__preview-dot--red"></span>
+        <span class="hero__preview-dot hero__preview-dot--yellow"></span>
+        <span class="hero__preview-dot hero__preview-dot--green"></span>
+        <span class="hero__preview-title">TaskFlow — Розробка продукту</span>
+      </div>
+      <div class="hero__preview-board">
+        <div class="hero__preview-col">
+          <div class="hero__preview-col-header">
+            <span>До виконання</span><span class="hero__preview-count">3</span>
+          </div>
+          <div class="hero__preview-card hero__preview-card--urgent">
+            <div class="hero__preview-card-bar"></div>
+            <div class="hero__preview-card-body">
+              <span class="hero__preview-card-title">Дизайн нового лендінгу</span>
+              <span class="hero__preview-card-meta">
+                <svg class="icon icon--sm"><use href="#icon-calendar"/></svg> 12.06
+              </span>
+            </div>
+          </div>
+          <div class="hero__preview-card">
+            <div class="hero__preview-card-bar hero__preview-card-bar--normal"></div>
+            <div class="hero__preview-card-body">
+              <span class="hero__preview-card-title">Написати документацію</span>
+              <span class="hero__preview-card-meta">
+                <svg class="icon icon--sm"><use href="#icon-calendar"/></svg> 15.06
+              </span>
+            </div>
+          </div>
+          <div class="hero__preview-card">
+            <div class="hero__preview-card-bar hero__preview-card-bar--low"></div>
+            <div class="hero__preview-card-body">
+              <span class="hero__preview-card-title">Оновити залежності</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero__preview-col">
+          <div class="hero__preview-col-header">
+            <span>В процесі</span><span class="hero__preview-count hero__preview-count--blue">2</span>
+          </div>
+          <div class="hero__preview-card hero__preview-card--active">
+            <div class="hero__preview-card-bar hero__preview-card-bar--high"></div>
+            <div class="hero__preview-card-body">
+              <span class="hero__preview-card-title">Реалізувати авторизацію</span>
+              <div class="hero__preview-progress">
+                <div class="hero__preview-progress-fill" style="width:65%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="hero__preview-card">
+            <div class="hero__preview-card-bar hero__preview-card-bar--normal"></div>
+            <div class="hero__preview-card-body">
+              <span class="hero__preview-card-title">Налаштувати CI/CD</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero__preview-col">
+          <div class="hero__preview-col-header">
+            <span>Виконано</span><span class="hero__preview-count hero__preview-count--green">4</span>
+          </div>
+          <div class="hero__preview-card hero__preview-card--done">
+            <div class="hero__preview-card-bar hero__preview-card-bar--done"></div>
+            <div class="hero__preview-card-body">
+              <span class="hero__preview-card-title hero__preview-card-title--done">Створити моделі БД</span>
+              <svg class="icon icon--sm" style="color:var(--green)"><use href="#icon-check-circle"/></svg>
+            </div>
+          </div>
+          <div class="hero__preview-card hero__preview-card--done">
+            <div class="hero__preview-card-bar hero__preview-card-bar--done"></div>
+            <div class="hero__preview-card-body">
+              <span class="hero__preview-card-title hero__preview-card-title--done">Налаштувати Django</span>
+              <svg class="icon icon--sm" style="color:var(--green)"><use href="#icon-check-circle"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+ 
+
+
+  <section class="features">
+    <div class="features__inner">
+      <div class="features__header">
+        <h2 class="features__title">Все що потрібно команді</h2>
+        <p class="features__subtitle">Від простих завдань до складних проектів</p>
+      </div>
+
+      <div class="features__grid">
+
+        <div class="feature-card">
+          <div class="feature-card__icon feature-card__icon--amber">
+            <svg class="icon icon--lg" aria-hidden="true"><use href="#icon-columns"/></svg>
+          </div>
+          <h3 class="feature-card__title">Kanban дошка</h3>
+          <p class="feature-card__text">
+            Перетягуй картки між колонками. Статус завдання змінюється автоматично.
+            Drag & drop без зайвих кліків.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-card__icon feature-card__icon--blue">
+            <svg class="icon icon--lg" aria-hidden="true"><use href="#icon-users"/></svg>
+          </div>
+          <h3 class="feature-card__title">Ролі та доступи</h3>
+          <p class="feature-card__text">
+            Власник, адміністратор, учасник, гість. Гнучка система дозволів
+            для кожного простору.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-card__icon feature-card__icon--green">
+            <svg class="icon icon--lg" aria-hidden="true"><use href="#icon-check-circle"/></svg>
+          </div>
+          <h3 class="feature-card__title">Підзавдання</h3>
+          <p class="feature-card__text">
+            Розбивай великі завдання на підзавдання з власним статусом.
+            Прогрес-бар покаже скільки вже зроблено.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-card__icon feature-card__icon--purple">
+            <svg class="icon icon--lg" aria-hidden="true"><use href="#icon-tag"/></svg>
+          </div>
+          <h3 class="feature-card__title">Теги та пріоритети</h3>
+          <p class="feature-card__text">
+            Кольорові теги і чотири рівні пріоритету — від «Терміново» до «Низький».
+            Фільтруй і знаходь потрібне за секунди.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-card__icon feature-card__icon--orange">
+            <svg class="icon icon--lg" aria-hidden="true"><use href="#icon-clipboard-list"/></svg>
+          </div>
+          <h3 class="feature-card__title">Коментарі</h3>
+          <p class="feature-card__text">
+            Обговорюй деталі прямо у картці завдання. Відповідай на коментарі,
+            редагуй і видаляй — повна гнучкість.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-card__icon feature-card__icon--red">
+            <svg class="icon icon--lg" aria-hidden="true"><use href="#icon-bar-chart"/></svg>
+          </div>
+          <h3 class="feature-card__title">Аналітика</h3>
+          <p class="feature-card__text">
+            Відстежуй прогрес проекту: скільки виконано, в процесі,
+            прострочено. Журнал активності по кожному завданню.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <section class="landing-cta">
+    <div class="landing-cta__inner">
+      <h2 class="landing-cta__title">Готовий почати?</h2>
+      <p class="landing-cta__subtitle">Реєстрація займає менше хвилини. Безкоштовно.</p>
+      <a href="{% url 'register' %}" class="btn btn--primary landing-cta__btn">
+        Створити акаунт
+        <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-arrow-right"/></svg>
+      </a>
+    </div>
+  </section>
+
+ 
+  <footer class="landing-footer">
+    <div class="landing-footer__inner">
+      <span class="landing-footer__logo">
+        <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-zap"/></svg>
+        TaskFlow
+      </span>
+      <span class="landing-footer__copy">© 2026 Task Manager</span>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/landing.js' %}"></script>
+</body>
+</html>

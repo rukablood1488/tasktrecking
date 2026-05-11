@@ -6,7 +6,11 @@
   <div class="form-card form-card--danger">
 
     <div class="form-card__header">
-      <span class="form-card__danger-icon">🗑️</span>
+      <span class="form-card__danger-icon">
+        <svg class="icon icon--sm" aria-hidden="true">
+          <use href="#icon-trash-2"></use>
+        </svg>
+      </span>
       <h1 class="form-card__title">Видалити завдання?</h1>
     </div>
 
@@ -17,7 +21,10 @@
 
     {% if object.subtask_count > 0 %}
       <div class="form-card__warning-box">
-        ⚠️ Разом з ним буде видалено
+        <svg class="icon icon--sm" aria-hidden="true">
+          <use href="#icon-alert-triangle"></use>
+        </svg>
+        Разом з ним буде видалено
         <strong>{{ object.subtask_count }}</strong> підзавдань
         та всі коментарі.
       </div>
@@ -26,7 +33,7 @@
     <form method="POST" class="form-actions">
       {% csrf_token %}
       <button type="submit" class="btn btn--danger">Так, видалити</button>
-      <a href="{% url 'task-detail' pk=object.pk %}" class="btn btn--ghost">Скасувати</a>
+      <a href="{% url 'project-detail' pk=object.task_list.project.pk %}" class="btn btn--ghost">Скасувати</a>
     </form>
 
   </div>

@@ -5,13 +5,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}TaskFlow{% endblock %}</title>
-
-  <link rel="stylesheet" href="{% static 'css/main.css' %}" />
-
+  <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/layout.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/pages.css' %}" />
   {% block extra_css %}{% endblock %}
 </head>
-
 <body class="app-body">
+
+  {% include "partials/icons.html" %}
 
   {% if user.is_authenticated %}
     {% include "partials/sidebar.html" %}
@@ -20,7 +22,50 @@
   <div class="main-wrapper {% if not user.is_authenticated %}main-wrapper--full{% endif %}">
 
     {% if user.is_authenticated %}
-      {% include "partials/topbar.html" %}
+    <header class="topbar">
+
+      <nav class="topbar__breadcrumbs" aria-label="Навігація">
+        {% block breadcrumbs %}
+          <a href="{% url 'workspace-list' %}" class="topbar__crumb">Простори</a>
+        {% endblock %}
+      </nav>
+
+      <form class="topbar__search" action="{% url 'task-list' %}" method="GET" role="search">
+        <span class="topbar__search-icon" aria-hidden="true">
+          <svg class="icon icon--sm"><use href="#icon-search"/></svg>
+        </span>
+        <input type="search" name="q" class="topbar__search-input"
+               placeholder="Пошук завдань..." value="{{ request.GET.q }}" autocomplete="off" />
+      </form>
+
+      <button class="topbar__icon-btn" title="Сповіщення" aria-label="Сповіщення">
+        <svg class="icon icon--md"><use href="#icon-bell"/></svg>
+      </button>
+
+      <div class="topbar__user-menu" id="userMenu">
+        <button class="topbar__avatar" id="userMenuToggle"
+                aria-expanded="false" aria-haspopup="true">
+          {{ user.username|first|upper }}
+        </button>
+        <div class="topbar__dropdown" id="userDropdown" role="menu">
+          <div class="topbar__dropdown-header">
+            <strong>{{ user.get_full_name|default:user.username }}</strong>
+            <small>{{ user.email }}</small>
+          </div>
+          <hr class="topbar__dropdown-divider" />
+          <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit"
+                    class="topbar__dropdown-item topbar__dropdown-item--danger"
+                    role="menuitem">
+              <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-log-out"/></svg>
+              Вийти
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </header>
     {% endif %}
 
     {% if messages %}
@@ -28,7 +73,9 @@
         {% for message in messages %}
           <div class="alert alert--{{ message.tags }}">
             <span class="alert__text">{{ message }}</span>
-            <button class="alert__close" onclick="this.parentElement.remove()">✕</button>
+            <button class="alert__close" onclick="this.parentElement.remove()">
+              <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-x"/></svg>
+            </button>
           </div>
         {% endfor %}
       </div>
@@ -38,9 +85,8 @@
       {% block content %}{% endblock %}
     </main>
 
-  </div>{# /main-wrapper #}
+  </div>
 
-  
   <script src="{% static 'js/main.js' %}"></script>
   {% block extra_js %}{% endblock %}
 
