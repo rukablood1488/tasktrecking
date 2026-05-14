@@ -1,7 +1,6 @@
 from .models import Notification
 
 def _create(recipient, actor, notif_type, text, url=""):
-    # ПОВЕРТАЄМО ПЕРЕВІРКУ: не надсилати сповіщення самому собі
     if recipient == actor:
         return
     Notification.objects.create(
@@ -12,9 +11,7 @@ def _create(recipient, actor, notif_type, text, url=""):
         url=url,
     )
 
-# ────────────────────────────────────────────────────────────
 # Workspace 
-# ────────────────────────────────────────────────────────────
 
 def notify_added_to_workspace(user, actor, workspace):
     _create(
@@ -37,15 +34,11 @@ def notify_member_added(workspace, new_user, actor):
         url=workspace.get_absolute_url(),
     )
 
-# ────────────────────────────────────────────────────────────
-# Task Helpers (НОВА ЛОГІКА ДЛЯ ЗАВДАНЬ)
-# ────────────────────────────────────────────────────────────
+
+# Task Helpers
+
 
 def _get_task_recipients(task):
-    """
-    Збирає унікальний список користувачів, яким треба надіслати сповіщення:
-    це автор завдання + всі призначені виконавці.
-    """
     recipients = set()
     if task.created_by:
         recipients.add(task.created_by)
@@ -53,9 +46,7 @@ def _get_task_recipients(task):
         recipients.add(assignee)
     return recipients
 
-# ────────────────────────────────────────────────────────────
 # Task
-# ────────────────────────────────────────────────────────────
 
 def notify_task_status_changed(task, actor, old_status, new_status):
     for recipient in _get_task_recipients(task):
@@ -87,9 +78,7 @@ def notify_task_deleted(task, actor):
             url="", 
         )
 
-# ────────────────────────────────────────────────────────────
 # Comment 
-# ────────────────────────────────────────────────────────────
 
 def notify_task_commented(task, comment, actor):
     for recipient in _get_task_recipients(task):
@@ -130,9 +119,7 @@ def notify_comment_deleted(comment, actor):
             url=comment.task.get_absolute_url() + "#comments",
         )
 
-# ────────────────────────────────────────────────────────────
 # Project
-# ────────────────────────────────────────────────────────────
 
 def notify_project_edited(project, actor):
     if project.created_by:
