@@ -8,6 +8,7 @@ from django.contrib import messages
 
 from .models import Workspace, WorkspaceMember, Project, TaskList, Task, TaskActivity
 from .mixins import WorkspaceMemberMixin, WorkspaceAdminMixin
+from . import notifications as notif
 
 
 # WorkspaceMember ─────────────────────────────────────
@@ -56,6 +57,8 @@ class WorkspaceMemberInviteView(WorkspaceAdminMixin, View):
             role = WorkspaceMember.Role.MEMBER
 
         WorkspaceMember.objects.create(workspace=workspace, user=user, role=role)
+        notif.notify_added_to_workspace(user, request.user, workspace)
+        notif.notify_member_added(workspace, user, request.user)
         messages.success(request, f"«{username}» додано до простору з роллю «{role}».")
         return redirect(reverse("workspace-detail", kwargs={"pk": workspace_pk}))
 
