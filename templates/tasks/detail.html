@@ -135,18 +135,37 @@
       </h2>
 
       
-      <form class="comment-form" method="POST"
-            action="{% url 'comment-create' task_pk=task.pk %}">
-        {% csrf_token %}
-        <div class="comment-form__avatar">{{ request.user.username|first|upper }}</div>
-        <div class="comment-form__body">
-          <textarea name="content" class="form-control comment-form__input"
-                    rows="2" placeholder="Написати коментар..." required></textarea>
-          <div class="comment-form__actions">
-            <button type="submit" class="btn btn--primary btn--sm">Надіслати</button>
+      <form class="comment-form" method="POST" enctype="multipart/form-data" 
+          action="{% url 'comment-create' task_pk=task.pk %}">
+      {% csrf_token %}
+      <div class="comment-form__avatar">{{ request.user.username|first|upper }}</div>
+  
+      <div class="comment-form__body">
+        <textarea name="content" class="form-control comment-form__input" 
+                  placeholder="Напишіть коментар або додайте фото..."></textarea>
+    
+        <div class="comment-form__footer">
+          <div class="file-upload-wrapper">
+            <label for="comment-image-input" class="file-upload-label" title="Прикріпити зображення">
+              <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+              <span>Фото</span>
+            </label>
+            <input type="file" name="image" id="comment-image-input" 
+                  class="file-upload-input" accept="image/*" onchange="showFileName(this)">
+            <span id="file-chosen" class="file-name-preview"></span>
           </div>
+
+          <button type="submit" class="btn btn--primary btn--sm">Надіслати</button>
         </div>
-      </form>
+      </div>
+    </form>
+
+    <script>
+    function showFileName(input) {
+      const fileName = input.files[0].name;
+      document.getElementById('file-chosen').textContent = fileName;
+    }
+    </script>
 
       
       <div class="comments-list">
@@ -166,7 +185,16 @@
                 {% endif %}
               </div>
 
-              <div class="comment__text">{{ comment.content|linebreaks }}</div>
+              <div class="comment__text">
+                {{ comment.content|linebreaks }}
+                {% if comment.image %}
+                  <div class="comment__image-wrapper" style="margin-top: 10px;">
+                    <a href="{{ comment.image.url }}" target="_blank">
+                      <img src="{{ comment.image.url }}" alt="Скриншот" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 1px solid #eee;">
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
 
               <div class="comment__actions">
             
@@ -201,7 +229,16 @@
                             <span class="comment__edited">(відредаговано)</span>
                           {% endif %}
                         </div>
-                        <div class="comment__text">{{ reply.content|linebreaks }}</div>
+                        <div class="comment__text">
+                          {{ reply.content|linebreaks }}
+                          {% if reply.image %}
+                            <div class="comment__image-wrapper" style="margin-top: 10px;">
+                              <a href="{{ reply.image.url }}" target="_blank">
+                                <img src="{{ reply.image.url }}" alt="Скриншот" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid #eee;">
+                              </a>
+                            </div>
+                          {% endif %}
+                        </div>
                         {% if reply.author == request.user %}
                           <div class="comment__actions">
                             <a href="{% url 'comment-update' pk=reply.pk %}"
@@ -233,9 +270,9 @@
     
     <div class="task-sidebar__section">
       <h3 class="task-sidebar__label">Статус</h3>
-      <form method="POST" action="{% url 'task-status-update' pk=task.pk %}">
+      <form method="POST" action="{% url 'task-status-update' pk=task.pk %}" class="js-status-form">
         {% csrf_token %}
-        <select name="status" class="form-select" onchange="this.form.submit()">
+        <select name="status" class="form-select" onchange="this.form.requestSubmit()">
           {% for value, label in status_choices %}
             <option value="{{ value }}" {% if task.status == value %}selected{% endif %}>
               {{ label }}

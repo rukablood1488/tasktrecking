@@ -274,27 +274,35 @@ function initViewToggle() {
 // ──────────────────────────────────────────────────────────────
 
 function initStatusForms() {
-  $$('form[action*="/status/"]').forEach(form => {
-    const select = $('select[name="status"]', form);
-    if (!select) return;
+  // Шукаємо всі форми зміни статусу (додай цей клас до своїх форм у шаблоні, якщо його немає)
+  document.querySelectorAll('.js-status-form').forEach(form => {
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault(); // ЦЕЙ РЯДОК ЗУПИНЯЄ "ЧОРНУ СТОРІНКУ"
 
-    select.addEventListener('change', async () => {
-      select.disabled = true;
+      const url = this.action;
+      const formData = new FormData(this);
+
       try {
-        const data = await apiFetch(form.action, { status: select.value });
-        if (data.success) {
-          const badge = $('.task-detail__meta .status-badge');
-          if (badge) {
-            badge.className   = `status-badge status-badge--${data.status}`;
-            badge.textContent = data.status_display;
-            springIn(badge, { transform: 'scale(1.2)' }, { transform: 'scale(1)' }, 240);
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest', // Кажемо серверу, що це AJAX
+            'X-CSRFToken': getCsrf()
           }
-          showFlash(`Статус змінено на «${data.status_display}»`);
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          // Тут можна оновити інтерфейс без перезавантаження
+          // Наприклад, змінити колір бейджа або текст
+          console.log('Статус оновлено:', data.status_display);
+          
+          // Або просто перезавантажити сторінку автоматично:
+          // window.location.reload();
         }
-      } catch {
-        showFlash('Помилка зміни статусу', 'error');
-      } finally {
-        select.disabled = false;
+      } catch (error) {
+        console.error('Помилка:', error);
       }
     });
   });

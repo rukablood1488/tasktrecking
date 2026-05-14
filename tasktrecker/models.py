@@ -286,7 +286,8 @@ class Comment(models.Model):
         related_name="replies",
         verbose_name="Відповідь на"
     )
-    content = models.TextField(verbose_name="Текст коментаря")
+    content = models.TextField(verbose_name="Текст коментаря", blank=True)
+    image = models.ImageField(upload_to="comments/images/", null=True, blank=True, verbose_name="Прикріплене зображення")
     is_edited = models.BooleanField(default=False, verbose_name="Відредаговано")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
