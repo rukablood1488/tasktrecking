@@ -13,6 +13,7 @@ from django.contrib import messages
 from django.views.generic import TemplateView
 
 from .models import Workspace, WorkspaceMember, Project, TaskList, Task, Comment, Tag, TaskActivity
+from . import notifications as notif
 
 from .mixins import (
     WorkspaceMemberMixin,
@@ -229,6 +230,12 @@ class ProjectUpdateView(WorkspaceAdminMixin, UpdateView):
         self.kwargs["workspace_pk"] = project.workspace.pk
         return project.workspace
 
+    def form_valid(self, form):
+        project = self.get_object()
+        response = super().form_valid(form)
+        notif.notify_project_edited(self.object, self.request.user)
+        return response
+
 
 class ProjectDeleteView(WorkspaceAdminMixin, DeleteView):
     model = Project
@@ -241,6 +248,10 @@ class ProjectDeleteView(WorkspaceAdminMixin, DeleteView):
 
     def get_success_url(self):
         return reverse("workspace-detail", kwargs={"pk": self.object.workspace.pk})
+
+    def form_valid(self, form):
+        notif.notify_project_deleted(self.object, self.request.user)
+        return super().form_valid(form)
 
 
 # Task ──────────────────────────────────────────────────────
@@ -429,6 +440,11 @@ class TaskUpdateView(TaskOwnerOrAdminMixin, UpdateView):
             if task.status == Task.Status.DONE:
                 task.completed_at = timezone.now()
                 task.save(update_fields=["completed_at"])
+            notif.notify_task_status_changed(
+                task, self.request.user,
+                old_task.get_status_display(),
+                task.get_status_display(),
+            )
 
         if old_task.priority != task.priority:
             TaskActivity.objects.create(
@@ -438,6 +454,7 @@ class TaskUpdateView(TaskOwnerOrAdminMixin, UpdateView):
                 new_value=task.get_priority_display(),
             )
 
+        notif.notify_task_edited(task, self.request.user)
         messages.success(self.request, "Завдання оновлено.")
         return response
 
@@ -450,6 +467,7 @@ class TaskDeleteView(TaskOwnerOrAdminMixin, DeleteView):
         return reverse("project-detail", kwargs={"pk": self.object.task_list.project.pk})
 
     def form_valid(self, form):
+        notif.notify_task_deleted(self.object, self.request.user)
         messages.success(self.request, f"Завдання «{self.object.title}» видалено.")
         return super().form_valid(form)
 
@@ -476,6 +494,11 @@ class TaskStatusUpdateView(LoginRequiredMixin, View):
             activity_type=TaskActivity.ActivityType.STATUS_CHANGED,
             old_value=old_status,
             new_value=new_status,
+        )
+        notif.notify_task_status_changed(
+            task, request.user,
+            dict(Task.Status.choices).get(old_status, old_status),
+            task.get_status_display(),
         )
         return JsonResponse({
             "success": True,
@@ -505,7 +528,7 @@ class CommentCreateView(LoginRequiredMixin, View):
         if parent_id:
             parent_comment = get_object_or_404(Comment, pk=parent_id, task=task)
 
-        Comment.objects.create(
+        comment = Comment.objects.create(
             task=task, author=request.user,
             content=content, parent_comment=parent_comment,
         )
@@ -513,6 +536,11 @@ class CommentCreateView(LoginRequiredMixin, View):
             task=task, user=request.user,
             activity_type=TaskActivity.ActivityType.COMMENTED,
         )
+        # Сповіщення автору завдання про новий коментар
+        notif.notify_task_commented(task, comment, request.user)
+        # Сповіщення автору батьківського коментаря про відповідь
+        if parent_comment:
+            notif.notify_comment_replied(parent_comment, request.user, task)
         messages.success(request, "Коментар додано.")
         return redirect(task.get_absolute_url() + "#comments")
 
@@ -529,12 +557,17 @@ class CommentUpdateView(CommentAuthorOrAdminMixin, UpdateView):
         comment = form.save(commit=False)
         comment.is_edited = True
         comment.save()
+        notif.notify_comment_edited(comment, self.request.user)
         return redirect(comment.task.get_absolute_url() + "#comments")
 
 
 class CommentDeleteView(CommentAuthorOrAdminMixin, DeleteView):
     model = Comment
     template_name = "tasks/comment_confirm_delete.html"
+
+    def form_valid(self, form):
+        notif.notify_comment_deleted(self.object, self.request.user)
+        return super().form_valid(form)
 
     def get_success_url(self):
         return self.object.task.get_absolute_url() + "#comments"

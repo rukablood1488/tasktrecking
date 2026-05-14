@@ -1045,3 +1045,142 @@ select.form-select {
 .activity-item__user   { color: var(--text-2); font-weight: 500; }
 .activity-item__change { color: var(--blue); }
 .activity-item__time   { margin-left: auto; }
+
+
+/* ── Notification bell & dropdown ─────────────────────────── */
+
+.topbar__notif {
+  position: relative;
+}
+
+.topbar__icon-btn--notif {
+  position: relative;
+}
+
+/* Червоний лічильник на дзвіночку */
+.notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: var(--danger, #F75E5E);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  border-radius: 8px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Dropdown panel */
+.topbar__notif-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 340px;
+  background: var(--surface-2, #1e1e2e);
+  border: 1px solid var(--border, #2a2a3d);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.notif-dropdown__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border, #2a2a3d);
+}
+
+.notif-dropdown__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1, #e0e0f0);
+}
+
+.notif-dropdown__mark-all {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--accent, #f7a134);
+  padding: 0;
+}
+
+.notif-dropdown__mark-all:hover {
+  text-decoration: underline;
+}
+
+.notif-dropdown__list {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+/* Окремий рядок сповіщення */
+.notif-item {
+  display: block;
+  border: none;
+  background: none;
+  width: 100%;
+  padding: 0;
+  border-bottom: 1px solid var(--border, #2a2a3d);
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item--unread {
+  background: var(--surface-3, #252538);
+}
+
+.notif-item__btn {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 11px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms;
+}
+
+.notif-item__btn:hover {
+  background: var(--surface-hover, #2e2e45);
+}
+
+.notif-item__text {
+  font-size: 13px;
+  color: var(--text-1, #e0e0f0);
+  line-height: 1.4;
+}
+
+.notif-item--unread .notif-item__text::before {
+  content: "● ";
+  color: var(--accent, #f7a134);
+  font-size: 8px;
+  vertical-align: middle;
+}
+
+.notif-item__time {
+  font-size: 11px;
+  color: var(--text-3, #6b6b8a);
+}
+
+/* Порожній стан */
+.notif-dropdown__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  color: var(--text-3, #6b6b8a);
+  font-size: 13px;
+}

@@ -38,31 +38,80 @@
                placeholder="Пошук завдань..." value="{{ request.GET.q }}" autocomplete="off" />
       </form>
 
-      <button class="topbar__icon-btn" title="Сповіщення" aria-label="Сповіщення">
-        <svg class="icon icon--md"><use href="#icon-bell"/></svg>
-      </button>
+      <div class="topbar__actions" style="display: flex; align-items: center; gap: 12px;">
 
-      <div class="topbar__user-menu" id="userMenu">
-        <button class="topbar__avatar" id="userMenuToggle"
-                aria-expanded="false" aria-haspopup="true">
-          {{ user.username|first|upper }}
-        </button>
-        <div class="topbar__dropdown" id="userDropdown" role="menu">
-          <div class="topbar__dropdown-header">
-            <strong>{{ user.get_full_name|default:user.username }}</strong>
-            <small>{{ user.email }}</small>
+        <div class="topbar__notif" id="notifMenu">
+          <button class="topbar__icon-btn topbar__icon-btn--notif"
+                  id="notifToggle"
+                  title="Сповіщення"
+                  aria-label="Сповіщення"
+                  aria-expanded="false"
+                  aria-haspopup="true">
+            <svg class="icon icon--md"><use href="#icon-bell"/></svg>
+            {% if unread_count %}
+              <span class="notif-badge">{{ unread_count }}</span>
+            {% endif %}
+          </button>
+
+          <div class="topbar__notif-dropdown" id="notifDropdown" role="menu" style="display:none;">
+            <div class="notif-dropdown__header">
+              <span class="notif-dropdown__title">Сповіщення</span>
+              {% if unread_count %}
+                <form method="POST" action="{% url 'notification-read-all' %}" id="markAllForm">
+                  {% csrf_token %}
+                  <button type="submit" class="notif-dropdown__mark-all">
+                    Позначити всі прочитаними
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+
+            <div class="notif-dropdown__list">
+              {% if recent_notifications %}
+                {% for n in recent_notifications %}
+                  <form method="POST"
+                        action="{% url 'notification-read' pk=n.pk %}"
+                        class="notif-item {% if not n.is_read %}notif-item--unread{% endif %}">
+                    {% csrf_token %}
+                    <button type="submit" class="notif-item__btn">
+                      <span class="notif-item__text">{{ n.text }}</span>
+                      <span class="notif-item__time">{{ n.created_at|timesince }} тому</span>
+                    </button>
+                  </form>
+                {% endfor %}
+              {% else %}
+                <div class="notif-dropdown__empty">
+                  <svg class="icon" style="width:32px;height:32px;opacity:.3"><use href="#icon-bell"/></svg>
+                  <p>Немає сповіщень</p>
+                </div>
+              {% endif %}
+            </div>
           </div>
-          <hr class="topbar__dropdown-divider" />
-          <form method="POST" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit"
-                    class="topbar__dropdown-item topbar__dropdown-item--danger"
-                    role="menuitem">
-              <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-log-out"/></svg>
-              Вийти
-            </button>
-          </form>
         </div>
+
+        <div class="topbar__user-menu" id="userMenu">
+          <button class="topbar__avatar" id="userMenuToggle"
+                  aria-expanded="false" aria-haspopup="true">
+            {{ user.username|first|upper }}
+          </button>
+          <div class="topbar__dropdown" id="userDropdown" role="menu">
+            <div class="topbar__dropdown-header">
+              <strong>{{ user.get_full_name|default:user.username }}</strong>
+              <small>{{ user.email }}</small>
+            </div>
+            <hr class="topbar__dropdown-divider" />
+            <form method="POST" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit"
+                      class="topbar__dropdown-item topbar__dropdown-item--danger"
+                      role="menuitem">
+                <svg class="icon icon--sm" aria-hidden="true"><use href="#icon-log-out"/></svg>
+                Вийти
+              </button>
+            </form>
+          </div>
+        </div>
+
       </div>
 
     </header>

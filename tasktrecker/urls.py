@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import views_extra
+from . import views_notifications
 
 
 auth_patterns = [
@@ -146,6 +147,17 @@ comment_patterns = [
 
 
 
+notification_patterns = [
+    path("notifications/<int:pk>/read/",
+         views_notifications.NotificationMarkReadView.as_view(),
+         name="notification-read"),
+
+    path("notifications/read-all/",
+         views_notifications.NotificationMarkAllReadView.as_view(),
+         name="notification-read-all"),
+]
+
+
 urlpatterns = (
     auth_patterns
     + landing_pattern
@@ -153,4 +165,5 @@ urlpatterns = (
     + project_patterns
     + task_patterns
     + comment_patterns
+    + notification_patterns
 )

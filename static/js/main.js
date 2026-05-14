@@ -515,6 +515,68 @@ function animatePage() {
 //  INIT
 // ──────────────────────────────────────────────────────────────
 
+// ──────────────────────────────────────────────────────────────
+//  NOTIFICATION DROPDOWN
+// ──────────────────────────────────────────────────────────────
+
+function initNotifDropdown() {
+  const toggle   = document.getElementById('notifToggle');
+  const dropdown = document.getElementById('notifDropdown');
+  const menu     = document.getElementById('notifMenu');
+  if (!toggle || !dropdown || !menu) return;
+
+  function openDropdown() {
+    dropdown.style.display = 'block';
+    toggle.setAttribute('aria-expanded', 'true');
+    springIn(
+      dropdown,
+      { opacity: 0, transform: 'translateY(-8px) scale(0.96)' },
+      { opacity: 1, transform: 'translateY(0) scale(1)' },
+      180
+    );
+  }
+
+  function closeDropdown() {
+    dropdown.style.display = 'none';
+    toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  toggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    dropdown.style.display === 'none' ? openDropdown() : closeDropdown();
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!menu.contains(e.target)) closeDropdown();
+  });
+
+  // "Позначити всі" через fetch без перезавантаження
+  const markAllForm = document.getElementById('markAllForm');
+  if (markAllForm) {
+    markAllForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      fetch(markAllForm.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': markAllForm.querySelector('[name=csrfmiddlewaretoken]').value,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      }).then(() => {
+        const badge = document.querySelector('.notif-badge');
+        if (badge) badge.remove();
+        document.querySelectorAll('.notif-item--unread').forEach(el => {
+          el.classList.remove('notif-item--unread');
+        });
+        markAllForm.remove();
+      });
+    });
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+//  INIT
+// ──────────────────────────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', () => {
   initSidebar();
   initUserDropdown();
@@ -527,5 +589,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initStatusForms();
   initArchiveForms();
   initQuickCreate();
+  initNotifDropdown();
   animatePage();
 });

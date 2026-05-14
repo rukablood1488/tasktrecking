@@ -419,6 +419,14 @@
 }
 .topbar__icon-btn:hover { background: var(--surface-2); color: var(--text-1); }
 
+
+/* Контейнер для кнопок дій (сповіщення + аватар) */
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Акуратний відступ між дзвіночком та аватаркою */
+}
+
 /* User menu */
 .topbar__user-menu { position: relative; }
 
