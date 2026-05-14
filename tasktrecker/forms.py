@@ -320,19 +320,21 @@ class TaskFilterForm(forms.Form):
 
 
 class CommentForm(forms.ModelForm):
-
     class Meta:
         model = Comment
-        fields = ["content"]
-        labels = {"content": ""}
+        fields = ["content", "image"]
         widgets = {
             "content": forms.Textarea(attrs={
                 "class": "form-control",
                 "rows": 3,
                 "placeholder": "Написати коментар...",
+            }),
+            "image": forms.ClearableFileInput(attrs={
+                "class": "file-upload-input",
+                "accept": "image/*",
+                "id": "id_image"
             })
         }
-
 
 
 

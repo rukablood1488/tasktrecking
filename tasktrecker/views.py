@@ -505,10 +505,22 @@ class TaskStatusUpdateView(LoginRequiredMixin, View):
             "status": task.status,
             "status_display": task.get_status_display(),
         })
+    
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({
+                "success": True, 
+                "status": task.status, 
+                "status_display": task.get_status_display()
+            })
+    
+   
+        return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
 # Comments ──────────────────────────────────────────────────
 
+
+# views.py
 
 class CommentCreateView(LoginRequiredMixin, View):
 
@@ -519,10 +531,11 @@ class CommentCreateView(LoginRequiredMixin, View):
         )
         content  = request.POST.get("content", "").strip()
         parent_id = request.POST.get("parent_comment")
+        image = request.FILES.get("image")
 
-        if not content:
-            messages.error(request, "Коментар не може бути порожнім.")
-            return redirect(task.get_absolute_url())
+        if not content and not image:
+            messages.error(request, "Коментар не може бути порожнім (додайте текст або зображення).")
+            return redirect(task.get_absolute_url() + "#comments")
 
         parent_comment = None
         if parent_id:
@@ -531,7 +544,9 @@ class CommentCreateView(LoginRequiredMixin, View):
         comment = Comment.objects.create(
             task=task, author=request.user,
             content=content, parent_comment=parent_comment,
+            image=image
         )
+        
         TaskActivity.objects.create(
             task=task, user=request.user,
             activity_type=TaskActivity.ActivityType.COMMENTED,
